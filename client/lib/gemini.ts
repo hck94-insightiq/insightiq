@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
-import type { Account } from "@types";
+import type { Account } from "@/types";
 
 export const analysisSchema = z.object({
   primaryNiche: z
