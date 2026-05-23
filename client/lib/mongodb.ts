@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+﻿import { MongoClient } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add MONGODB_URI to .env");
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "development") {
 
 export async function getDb() {
   const client = await clientPromise;
-  return client.db("insightiq");
+  return client.db("InsightIQ");
 }
 
 export default clientPromise;
