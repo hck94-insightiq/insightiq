@@ -1,12 +1,14 @@
-//untuk types menyimpan semua type yang digunakan di project ini, agar lebih mudah untuk maintain dan import di file lain dan menghindari circular dependency, untuk cara importnya cukup import dari file ini saja, contoh : import { User, Account } from '@/types';
+﻿//untuk types menyimpan semua type yang digunakan di project ini, agar lebih mudah untuk maintain dan import di file lain dan menghindari circular dependency, untuk cara importnya cukup import dari file ini saja, contoh : import { User, Account } from '@/types';
+
+import { DefaultSession } from "next-auth";
 
 export type Role = "user" | "admin";
 
 export interface User {
-  _id?: string;
+  _id: string;
   name: string;
   email: string;
-  password?: string;
+  password: string;
   role: Role;
   createdAt: Date;
 }
@@ -17,7 +19,7 @@ export interface PriceRange {
 }
 
 export interface Account {
-  _id?: string;
+  _id: string;
   userId: string;
   tiktokUsername: string;
   followers: number;
@@ -50,7 +52,7 @@ export interface Recommendation {
 }
 
 export interface Analysis {
-  _id?: string;
+  _id: string;
   userId: string;
   accountId: string;
   primaryNiche: string;
@@ -70,9 +72,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: Role;
-      name?: string | null;
-      email?: string | null;
-    };
+    } & DefaultSession["user"];
   }
 }
 
