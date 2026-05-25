@@ -1,5 +1,7 @@
 ﻿import { DefaultSession } from "next-auth";
 
+// Auth & User
+
 export type Role = "user" | "admin";
 
 export interface User {
@@ -10,6 +12,8 @@ export interface User {
   role: Role;
   createdAt: Date;
 }
+
+// Account (data TikTok dari Apify)
 
 export interface PostingDay {
   day: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
@@ -44,8 +48,9 @@ export interface Account {
   updatedAt: Date;
 }
 
+// AI Analysis (Gemini)
+
 export interface AudienceProfile {
-  gender: string;
   ageRange: string;
   purchasePower: string;
 }
@@ -65,8 +70,9 @@ export interface Analysis {
   primaryNiche: string;
   secondaryNiche: string;
   nuanceDescription: string;
-  audienceProfile: AudienceProfile;
   confidenceScore: number;
+  audienceProfile: AudienceProfile;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
   recommendations: Recommendation[];
   createdAt: Date;
 }
@@ -76,25 +82,12 @@ export interface AnalysisOutput {
   secondaryNiche: string;
   nuanceDescription: string;
   confidenceScore: number;
-
-  audienceProfile: {
-    ageRange: string;
-    purchasePower: string;
-  };
-
-  nicheBreakdown: Array<{
-    niche: string;
-    score: number;
-  }>;
-
-  recommendations: Array<{
-    category: string;
-    priceRange: string;
-    matchScore: number;
-    reason: string;
-    examples: string[];
-  }>;
+  audienceProfile: AudienceProfile;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
+  recommendations: Recommendation[];
 }
+
+// NextAuth module augmentation
 
 declare module "next-auth" {
   interface User {

@@ -7,60 +7,81 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Cell,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CHART_COLORS } from "@/lib/chart-colors";
-import { Analysis } from "@/types";
+import { Account } from "@/types";
 
 interface Props {
-  data?: Analysis["postingTimeRecommendation"]
+  account?: Account;
 }
 
-export default function PostingTimeChart({data}: Props) {
-  const chartData = data ?? []
-  const maxScore = chartData.length > 0 ? Math.max(...chartData.map((d) => d.score)) : 0
+function formatViews(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toString();
+}
+
+export default function PostingTimeChart({ account }: Props) {
+  const postingDays = (account?.postingDays ?? []).filter((d) => d.count > 0);
+  const maxViews =
+    postingDays.length > 0
+      ? Math.max(...postingDays.map((d) => d.avgViews))
+      : 0;
+  const chartData = postingDays.map((d) => ({
+    day: d.day,
+    avgViews: d.avgViews,
+    fill: d.avgViews === maxViews ? CHART_COLORS.emerald : CHART_COLORS.blue,
+  }));
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Best Posting Days</CardTitle>
         <CardDescription>
-          AI rekomendasi hari posting paling optimal untuk audiencemu
+          Rata-rata views per hari berdasarkan 20 video terakhir
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div style={{ height: 280 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" className="text-xs" />
-              <YAxis domain={[0, 10]} className="text-xs" />
-              <Tooltip
-                formatter={(value) => [`${value}/10`, "Score"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                }}
-              />
-              <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={
-                      entry.score === maxScore
-                        ? CHART_COLORS.emerald
-                        : CHART_COLORS.blue
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+              Data belum tersedia
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" className="text-xs" />
+                <YAxis
+                  className="text-xs"
+                  tickFormatter={formatViews}
+                  width={45}
+                />
+                <Tooltip
+                  formatter={(value) => [
+                    (value as number).toLocaleString("id-ID"),
+                    "Avg Views",
+                  ]}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                  }}
+                />
+                <Bar dataKey="avgViews" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>

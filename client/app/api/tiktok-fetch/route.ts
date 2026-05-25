@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 const APIFY_ACTOR = "clockworks~tiktok-scraper";
@@ -140,10 +141,10 @@ export async function POST(req: NextRequest) {
   const now = new Date();
 
   await db.collection("accounts").findOneAndUpdate(
-    { userId: session.user.id },
+    { userId: new ObjectId(session.user.id) },
     {
       $set: {
-        userId: session.user.id,
+        userId: new ObjectId(session.user.id),
         tiktokUsername: profile.name,
         nickName: profile.nickName ?? profile.name,
         contentDescription: profile.signature ?? "",

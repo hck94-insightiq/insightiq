@@ -1,68 +1,85 @@
 "use client";
 
+import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CHART_PALETTE } from "@/lib/chart-colors";
-import { Analysis } from "@/types";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CHART_COLORS } from "@/lib/chart-colors";
+import { Account } from "@/types";
 
 interface Props {
-  data?: Analysis["audienceProfile"]["genderBreakdown"]
-  ageRange?: string
+  account?: Account;
 }
 
-export default function AudienceDonut({data, ageRange}: Props) {
-  const chartData = data ? [
-    {name: "Female", value: data.female},
-    {name: "Male", value: data.male},
-    {name: "Other", value: data.other},
-  ] : []
+const COLORS = [
+  CHART_COLORS.pink,
+  CHART_COLORS.blue,
+  CHART_COLORS.emerald,
+  CHART_COLORS.amber,
+];
+
+export default function AudienceDonut({ account }: Props) {
+  const breakdown = account?.engagementBreakdown;
+
+  const chartData = breakdown
+    ? [
+        { name: "Likes", value: breakdown.likes, fill: CHART_COLORS.pink },
+        {
+          name: "Comments",
+          value: breakdown.comments,
+          fill: CHART_COLORS.blue,
+        },
+        { name: "Shares", value: breakdown.shares, fill: CHART_COLORS.emerald },
+        { name: "Saves", value: breakdown.saves, fill: CHART_COLORS.amber },
+      ].filter((d) => d.value > 0)
+    : [];
+
+  const total = chartData.reduce((s, d) => s + d.value, 0);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Audience Profile</CardTitle>
+        <CardTitle>Engagement Breakdown</CardTitle>
         <CardDescription>
-          Estimasi gender audience — AI-estimated
-          {ageRange && ` · ${ageRange}`}
+          Proporsi likes, comments, shares & saves dari 20 video terakhir
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div style={{ height: 280 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={70}
-                outerRadius={100}
-                paddingAngle={3}
-                dataKey="value"
-              >
-                {chartData.map((_, index) => (
-                  <Cell
-                    key={index}
-                    fill={CHART_PALETTE[index % CHART_PALETTE.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value) => [`${value}%`, "Proporsi"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+              Data belum tersedia
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                ></Pie>
+                <Tooltip
+                  formatter={(value) => [
+                    `${(((value as number) / total) * 100).toFixed(1)}% (${(value as number).toLocaleString("id-ID")})`,
+                    "Proporsi",
+                  ]}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>

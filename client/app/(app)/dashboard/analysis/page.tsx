@@ -13,8 +13,8 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ReAnalyzeButton } from "@/components/dashboard/ReAnalyzeButton";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { Sparkles, Users, Calender, TrendingUp } from "lucide-react";
+import EmptyState from "@/components/shared/EmptyState";
+import { Sparkles, Users, Calendar, TrendingUp } from "lucide-react";
 
 export default async function AnalysisPage() {
   const session = await getServerSession(authOptions);
@@ -137,7 +137,7 @@ export default async function AnalysisPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calender className="text-emerald-500" /> Best Postind Days
+            <Calendar className="text-emerald-500" /> Best Postind Days
           </CardTitle>
           <CardDescription>
             Score rekomendasi posting per hari berdasarkan kebiasaan audience
