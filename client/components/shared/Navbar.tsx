@@ -19,7 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/analysis": "AI Analysis",
   "/recommendations": "Recommendations",
   "/dashboard/chat": "AI Consultant",
-  "/dashboard/settings": "Settings & Account",
+  "/settings": "Settings & Account",
   "/admin": "Admin Panel",
   "/admin/users": "Admin Panel",
 };
@@ -34,7 +34,7 @@ function getPageTitle(pathname: string): { label: string; sublabel?: string } {
     };
   if (pathname.startsWith("/dashboard/chat"))
     return { label: "Chat with your AI consultant", sublabel: "AI CONSULTANT" };
-  if (pathname.startsWith("/dashboard/settings"))
+  if (pathname.startsWith("/settings"))
     return { label: "Settings & Account", sublabel: "SETTINGS" };
   if (pathname.startsWith("/admin"))
     return { label: "Admin Panel", sublabel: "ADMIN" };
@@ -106,7 +106,7 @@ export default function Navbar() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
                 <Link
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="cursor-pointer flex items-center gap-2"
                 >
                   <Settings size={15} />

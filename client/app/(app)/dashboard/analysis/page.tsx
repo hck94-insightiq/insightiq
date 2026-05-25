@@ -92,7 +92,7 @@ export default async function AnalysisPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="text blue-500" /> Nuence & Character
+            <TrendingUp className="text-blue-500" /> Nuance & Character
           </CardTitle>
           <CardDescription>Karakter unik akun kamu menurut AI</CardDescription>
         </CardHeader>
@@ -137,7 +137,7 @@ export default async function AnalysisPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="text-emerald-500" /> Best Postind Days
+            <Calendar className="text-emerald-500" /> Best Posting Days
           </CardTitle>
           <CardDescription>
             Score rekomendasi posting per hari berdasarkan kebiasaan audience
@@ -145,13 +145,16 @@ export default async function AnalysisPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
-            {analysis.postingTimeRecommendation?.map((d: any) => (
+            {account.postingDays?.map((d: any) => (
               <div
                 key={d.day}
-                className="text-center p-3 rounder-lg bg-secondary/50"
+                className="text-center p-3 rounded-lg bg-secondary/50"
               >
                 <p className="text-xs text-muted-foreground mb-1">{d.day}</p>
-                <p className="text-xl font-bold">{d.score}/10</p>
+                <p className="text-xl font-bold">
+                  {Number(d.avgViews).toLocaleString("id-ID")}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{d.count}x</p>
               </div>
             ))}
           </div>

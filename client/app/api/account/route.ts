@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { accountSchema } from "@/lib/validators";
+import { ObjectId } from "mongodb";
 
 export async function GET() {
   try {
@@ -14,7 +15,7 @@ export async function GET() {
     const db = await getDb();
     const account = await db
       .collection("accounts")
-      .findOne({ userId: session.user.id });
+      .findOne({ userId: new ObjectId(session.user.id) });
 
     return NextResponse.json({ account });
   } catch (error) {
@@ -46,11 +47,11 @@ export async function POST(req: NextRequest) {
     const now = new Date();
 
     const result = await db.collection("accounts").findOneAndUpdate(
-      { userId: session.user.id },
+      { userId: new ObjectId(session.user.id) },
       {
         $set: {
           ...parsed.data,
-          userId: session.user.id,
+          userId: new ObjectId(session.user.id),
           updatedAt: now,
         },
         $setOnInsert: {

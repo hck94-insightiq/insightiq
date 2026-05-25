@@ -61,12 +61,9 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EngagementChart account={account as unknown as Account} />
           <NicheBreakdown data={typedAnalysis?.nicheBreakdown} />
-          <AudienceDonut
-            data={typedAnalysis?.audienceProfile?.genderBreakdown}
-            ageRange={typedAnalysis?.audienceProfile?.ageRange}
-          />
+          <AudienceDonut account={serializedAccount as Account} />
           <ProductMatchChart recommendations={typedAnalysis?.recommendations} />
-          <PostingTimeChart data={typedAnalysis?.postingTimeRecommendation} />
+          <PostingTimeChart account={serializedAccount as Account} />
         </div>
       )}
     </div>
