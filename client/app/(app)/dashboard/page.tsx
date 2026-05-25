@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
-import { KpiCards } from "@/components/dashboard/KpiCards";
+import KpiCards from "@/components/dashboard/KpiCards";
 import EngagementChart from "@/components/charts/EngagementChart";
 import EmptyState from "@/components/shared/EmptyState";
 import NicheBreakdown from "@/components/charts/NicheBreakdown";
 import AudienceDonut from "@/components/charts/AudienceDonut";
 import ProductMatchChart from "@/components/charts/ProductMatchChart";
 import PostingTimeChart from "@/components/charts/PostingTimeChart";
+import { Account, Analysis } from "@/types";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -39,7 +40,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <KpiCards />
+      <KpiCards account={account as unknown as Account} analysis={analysis as unknown as Analysis | null} />
 
       {!analysis && (
         <EmptyState
