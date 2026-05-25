@@ -1,6 +1,6 @@
-﻿//untuk types menyimpan semua type yang digunakan di project ini, agar lebih mudah untuk maintain dan import di file lain dan menghindari circular dependency, untuk cara importnya cukup import dari file ini saja, contoh : import { User, Account } from '@/types';
+﻿import { DefaultSession } from "next-auth";
 
-import { DefaultSession } from "next-auth";
+// Auth & User
 
 export type Role = "user" | "admin";
 
@@ -13,15 +13,27 @@ export interface User {
   createdAt: Date;
 }
 
-export interface PriceRange {
-  min: number;
-  max: number;
+// Account (data TikTok dari Apify)
+
+export interface PostingDay {
+  day: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+  avgViews: number;
+  count: number;
+}
+
+export interface EngagementBreakdown {
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
 }
 
 export interface Account {
   _id: string;
   userId: string;
   tiktokUsername: string;
+  nickName: string;
+  contentDescription: string;
   followers: number;
   following: number;
   totalVideos: number;
@@ -29,23 +41,18 @@ export interface Account {
   avgLikes: number;
   avgComments: number;
   avgShares: number;
-  primaryNiche: string;
   hashtags: string[];
-  contentDescription: string;
-  priceRange: PriceRange;
+  postingDays: PostingDay[];
+  engagementBreakdown: EngagementBreakdown;
   createdAt: Date;
   updatedAt: Date;
 }
 
+// AI Analysis (Gemini)
+
 export interface AudienceProfile {
-  gender: string;
   ageRange: string;
   purchasePower: string;
-  genderBreakdown: {
-    female: number;
-    male: number;
-    other: number;
-  };
 }
 
 export interface Recommendation {
@@ -63,13 +70,24 @@ export interface Analysis {
   primaryNiche: string;
   secondaryNiche: string;
   nuanceDescription: string;
-  audienceProfile: AudienceProfile;
   confidenceScore: number;
+  audienceProfile: AudienceProfile;
   nicheBreakdown: Array<{ niche: string; score: number }>;
-  postingTimeRecommendation: Array<{ day: string; score: number }>;
   recommendations: Recommendation[];
   createdAt: Date;
 }
+
+export interface AnalysisOutput {
+  primaryNiche: string;
+  secondaryNiche: string;
+  nuanceDescription: string;
+  confidenceScore: number;
+  audienceProfile: AudienceProfile;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
+  recommendations: Recommendation[];
+}
+
+// NextAuth module augmentation
 
 declare module "next-auth" {
   interface User {

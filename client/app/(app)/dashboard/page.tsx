@@ -24,6 +24,8 @@ export default async function DashboardPage() {
 
   if (!account) redirect("/onboarding");
 
+  const serializedAccount = JSON.parse(JSON.stringify(account));
+
   const analysis = await db
     .collection("analyses")
     .findOne(
@@ -42,7 +44,7 @@ export default async function DashboardPage() {
       </div>
 
       <KpiCards
-        account={account as unknown as Account}
+        account={serializedAccount as Account}
         analysis={typedAnalysis}
       />
 
@@ -63,7 +65,7 @@ export default async function DashboardPage() {
             data={typedAnalysis?.audienceProfile?.genderBreakdown}
             ageRange={typedAnalysis?.audienceProfile?.ageRange}
           />
-          <ProductMatchChart recommendations={typedAnalysis?.recommendations}/>
+          <ProductMatchChart recommendations={typedAnalysis?.recommendations} />
           <PostingTimeChart data={typedAnalysis?.postingTimeRecommendation} />
         </div>
       )}
