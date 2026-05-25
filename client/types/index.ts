@@ -41,6 +41,11 @@ export interface AudienceProfile {
   gender: string;
   ageRange: string;
   purchasePower: string;
+  genderBreakdown: {
+    female: number;
+    male: number;
+    other: number;
+  };
 }
 
 export interface Recommendation {
@@ -60,6 +65,8 @@ export interface Analysis {
   nuanceDescription: string;
   audienceProfile: AudienceProfile;
   confidenceScore: number;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
+  postingTimeRecommendation: Array<{ day: string; score: number }>;
   recommendations: Recommendation[];
   createdAt: Date;
 }
