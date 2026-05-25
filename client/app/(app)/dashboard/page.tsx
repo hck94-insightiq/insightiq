@@ -1,37 +1,64 @@
-import { AudienceDonut } from "@/components/charts/AudienceDonut";
-import EngagementChart from "@/components/charts/EngagementChart";
-import { NicheBreakdown } from "@/components/charts/NicheBreakdown";
-import { PostingTimeChart } from "@/components/charts/PostingTimeChart";
-import { ProductMatchChart } from "@/components/charts/ProductMatchChart";
+// app/(app)/dashboard/page.tsx
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
+import { redirect } from "next/navigation";
 import { KpiCards } from "@/components/dashboard/KpiCards";
-import { EmptyState } from "@/components/shared/EmptyState";
+import EngagementChart from "@/components/charts/EngagementChart";
+import EmptyState from "@/components/shared/EmptyState";
+import NicheBreakdown from "@/components/charts/NicheBreakdown";
+import AudienceDonut from "@/components/charts/AudienceDonut";
+import ProductMatchChart from "@/components/charts/ProductMatchChart";
+import PostingTimeChart from "@/components/charts/PostingTimeChart";
 
 export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) redirect("/login");
+
+  const db = await getDb();
+  const account = await db
+    .collection("accounts")
+    .findOne({ userId: new ObjectId(session.user.id) });
+
+  if (!account) redirect("/onboarding");
+
+  const analysis = await db
+    .collection("analyses")
+    .findOne(
+      { userId: new ObjectId(session.user.id) },
+      { sort: { createdAt: -1 } },
+    );
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Insight untuk @username</p>
+        <p className="text-muted-foreground">
+          Insight untuk @{account.tiktokUsername}
+        </p>
       </div>
 
       <KpiCards />
 
-      {/* {!analysis && (
+      {!analysis && (
         <EmptyState
           title="AI Analysis Belum Tersedia"
           description="Klik tombol di bawah untuk menjalankan analisis AI berdasarkan data akun yang sudah kamu input."
           ctaLabel="Jalankan AI Analysis"
           ctaHref="/dashboard/analysis"
         />
-      )} */}
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EngagementChart />
-        <NicheBreakdown />
-        <AudienceDonut />
-        <ProductMatchChart />
-        <PostingTimeChart />
-      </div>
+      {analysis && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EngagementChart />
+          <NicheBreakdown />
+          <AudienceDonut />
+          <ProductMatchChart />
+          <PostingTimeChart />
+        </div>
+      )}
     </div>
   );
 }

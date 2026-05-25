@@ -23,7 +23,7 @@ const MOCK_DATA = [
   { day: "Sun", score: 7 },
 ];
 
-export function PostingTimeChart() {
+export default function PostingTimeChart() {
   const maxScore = Math.max(...MOCK_DATA.map((d) => d.score));
 
   return (

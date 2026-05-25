@@ -10,7 +10,7 @@ interface Props {
     icon?: React.ReactNode
 }
 
-export function EmptyState({ title, description, ctaLabel, ctaHref, icon }: Props) {
+export default function EmptyState({ title, description, ctaLabel, ctaHref, icon }: Props) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center border-2 border-dashed rounded-lg">
       <div className="mb-4 text-muted-foreground">

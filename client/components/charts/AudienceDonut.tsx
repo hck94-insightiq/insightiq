@@ -17,7 +17,7 @@ const MOCK_DATA = [
   { name: "Other", value: 4 },
 ];
 
-export function AudienceDonut() {
+export default function AudienceDonut() {
   return (
     <Card>
       <CardHeader>
