@@ -1,8 +1,4 @@
-MONGODB_URI = ""
-<<<<<<< HEAD
+MONGODB_URI =""
 NEXTAUTH_URL=""
 NEXTAUTH_SECRET=""
 GOOGLE_GENERATIVE_AI_API_KEY =""
-=======
-GOOGLE_GENERATIVE_AI_API_KEY = ""
->>>>>>> origin/feat/ai-integration
