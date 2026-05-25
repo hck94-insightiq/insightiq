@@ -5,11 +5,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function LoginPage() {
             <Label className="text-white text-sm" htmlFor="email">
               Email
             </Label>
-            <input
+            <Input
               id="email"
               type="email"
               placeholder="Masukkan email Anda"
@@ -86,7 +87,7 @@ export default function LoginPage() {
             <Label className="text-white text-sm" htmlFor="password">
               Password
             </Label>
-            <input
+            <Input
               id="password"
               type="password"
               placeholder="Masukkan password Anda"
