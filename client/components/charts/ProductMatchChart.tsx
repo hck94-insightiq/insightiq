@@ -21,7 +21,7 @@ const MOCK_DATA = [
   { category: "Tech", matchScore: 30 },
 ];
 
-export function ProductMatchChart() {
+export default function ProductMatchChart() {
   return (
     <Card>
       <CardHeader>

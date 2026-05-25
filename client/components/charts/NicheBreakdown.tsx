@@ -21,7 +21,7 @@ const MOCK_DATA = [
   { niche: "Tech", score: 20 },
 ];
 
-export function NicheBreakdown() {
+export default function NicheBreakdown() {
   return (
     <Card>
       <CardHeader>
