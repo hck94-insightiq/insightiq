@@ -17,15 +17,20 @@ import {
   CardTitle,
 } from "../ui/card";
 import { CHART_COLORS } from "@/lib/chart-colors";
+import { Account } from "@/types";
 
-const MOCK_DATA = [
-  { metric: "Views", value: 15400 },
-  { metric: "Likes", value: 3200 },
-  { metric: "Comments", value: 480 },
-  { metric: "Shares", value: 210 },
-];
+interface Props {
+  account?: Account
+}
 
-export default function EngagementChart() {
+export default function EngagementChart( {account}: Props) {
+  const chartData = [
+    { metric: "Views", value: account?.avgViews ?? 0 },
+    { metric: "Likes", value: account?.avgLikes ?? 0 },
+    { metric: "Comments", value: account?.avgComments ?? 0 },
+    { metric: "Shares", value: account?.avgShares ?? 0 },
+  ]
+
   return (
     <Card>
       <CardHeader>
@@ -38,7 +43,7 @@ export default function EngagementChart() {
         <div style={{ height: 280 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={MOCK_DATA}
+              data={chartData}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" />

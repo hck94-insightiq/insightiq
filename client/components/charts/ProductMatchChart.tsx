@@ -12,16 +12,18 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CHART_PALETTE } from "@/lib/chart-colors";
+import { Analysis } from "@/types";
 
-const MOCK_DATA = [
-  { category: "Skincare", matchScore: 94 },
-  { category: "Fashion", matchScore: 78 },
-  { category: "Fitness", matchScore: 65 },
-  { category: "Food", matchScore: 50 },
-  { category: "Tech", matchScore: 30 },
-];
+interface Props {
+  recommendations?: Analysis["recommendations"]
+}
 
-export default function ProductMatchChart() {
+export default function ProductMatchChart({recommendations}: Props) {
+  const chartData = recommendations?.map((item) => ({
+    category: item.category,
+    matchScore: item.matchScore
+  })) ?? []
+
   return (
     <Card>
       <CardHeader>
@@ -35,7 +37,7 @@ export default function ProductMatchChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={MOCK_DATA}
+              data={chartData}
               margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -49,7 +51,7 @@ export default function ProductMatchChart() {
                 }}
               />
               <Bar dataKey="matchScore" radius={[0, 6, 6, 0]}>
-                {MOCK_DATA.map((_, index) => (
+                {chartData.map((_, index) => (
                   <Cell key={index} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
                 ))}
               </Bar>

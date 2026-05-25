@@ -31,6 +31,7 @@ export default async function DashboardPage() {
       { sort: { createdAt: -1 } },
     );
 
+  const typedAnalysis = analysis as unknown as Analysis | null;
   return (
     <div className="space-y-6">
       <div>
@@ -40,7 +41,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <KpiCards account={account as unknown as Account} analysis={analysis as unknown as Analysis | null} />
+      <KpiCards
+        account={account as unknown as Account}
+        analysis={typedAnalysis}
+      />
 
       {!analysis && (
         <EmptyState
@@ -53,11 +57,14 @@ export default async function DashboardPage() {
 
       {analysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementChart />
-          <NicheBreakdown />
-          <AudienceDonut />
-          <ProductMatchChart />
-          <PostingTimeChart />
+          <EngagementChart account={account as unknown as Account} />
+          <NicheBreakdown data={typedAnalysis?.nicheBreakdown} />
+          <AudienceDonut
+            data={typedAnalysis?.audienceProfile?.genderBreakdown}
+            ageRange={typedAnalysis?.audienceProfile?.ageRange}
+          />
+          <ProductMatchChart recommendations={typedAnalysis?.recommendations}/>
+          <PostingTimeChart data={typedAnalysis?.postingTimeRecommendation} />
         </div>
       )}
     </div>
