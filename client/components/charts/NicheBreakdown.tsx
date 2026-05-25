@@ -11,17 +11,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CHART_COLORS, CHART_PALETTE } from "@/lib/chart-colors";
+import { CHART_PALETTE } from "@/lib/chart-colors";
+import { Analysis } from "@/types";
 
-const MOCK_DATA = [
-  { niche: "Lifestyle", score: 85 },
-  { niche: "Beauty", score: 72 },
-  { niche: "Fashion", score: 65 },
-  { niche: "Food", score: 40 },
-  { niche: "Tech", score: 20 },
-];
+interface Props {
+  data? : Analysis["nicheBreakdown"]
+}
 
-export default function NicheBreakdown() {
+export default function NicheBreakdown({data}: Props) {
+  const chartData = data?.map((item) => ({niche: item.niche, score: item.score})) ?? []
   return (
     <Card>
       <CardHeader>
@@ -35,7 +33,7 @@ export default function NicheBreakdown() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={MOCK_DATA}
+              data={chartData}
               margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -49,7 +47,7 @@ export default function NicheBreakdown() {
                 }}
               />
               <Bar dataKey="score" radius={[0, 6, 6, 0]}>
-                {MOCK_DATA.map((_, index) => (
+                {chartData.map((_, index) => (
                   <Cell key={index} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
                 ))}
               </Bar>

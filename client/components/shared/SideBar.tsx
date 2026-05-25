@@ -8,10 +8,9 @@ import {
   MessageSquare,
   ShoppingBag,
   Settings,
-  LogOut,
   ShieldCheck,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -70,18 +69,6 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t border-gray-700 pt-4 mt-4">
-        <p className="text-sm text-gray-400 mb-3 truncate">
-          {session?.user?.email}
-        </p>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white w-full transition-colors"
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
-      </div>
     </aside>
   );
 }

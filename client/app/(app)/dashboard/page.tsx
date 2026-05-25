@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
-import { KpiCards } from "@/components/dashboard/KpiCards";
+import KpiCards from "@/components/dashboard/KpiCards";
 import EngagementChart from "@/components/charts/EngagementChart";
 import EmptyState from "@/components/shared/EmptyState";
 import NicheBreakdown from "@/components/charts/NicheBreakdown";
 import AudienceDonut from "@/components/charts/AudienceDonut";
 import ProductMatchChart from "@/components/charts/ProductMatchChart";
 import PostingTimeChart from "@/components/charts/PostingTimeChart";
+import { Account, Analysis } from "@/types";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
       { sort: { createdAt: -1 } },
     );
 
+  const typedAnalysis = analysis as unknown as Analysis | null;
   return (
     <div className="space-y-6">
       <div>
@@ -39,7 +41,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <KpiCards />
+      <KpiCards
+        account={account as unknown as Account}
+        analysis={typedAnalysis}
+      />
 
       {!analysis && (
         <EmptyState
@@ -52,11 +57,14 @@ export default async function DashboardPage() {
 
       {analysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementChart />
-          <NicheBreakdown />
-          <AudienceDonut />
-          <ProductMatchChart />
-          <PostingTimeChart />
+          <EngagementChart account={account as unknown as Account} />
+          <NicheBreakdown data={typedAnalysis?.nicheBreakdown} />
+          <AudienceDonut
+            data={typedAnalysis?.audienceProfile?.genderBreakdown}
+            ageRange={typedAnalysis?.audienceProfile?.ageRange}
+          />
+          <ProductMatchChart recommendations={typedAnalysis?.recommendations}/>
+          <PostingTimeChart data={typedAnalysis?.postingTimeRecommendation} />
         </div>
       )}
     </div>

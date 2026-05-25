@@ -12,19 +12,15 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CHART_COLORS } from "@/lib/chart-colors";
+import { Analysis } from "@/types";
 
-const MOCK_DATA = [
-  { day: "Mon", score: 5 },
-  { day: "Tue", score: 6 },
-  { day: "Wed", score: 7 },
-  { day: "Thu", score: 8 },
-  { day: "Fri", score: 9 },
-  { day: "Sat", score: 9 },
-  { day: "Sun", score: 7 },
-];
+interface Props {
+  data?: Analysis["postingTimeRecommendation"]
+}
 
-export default function PostingTimeChart() {
-  const maxScore = Math.max(...MOCK_DATA.map((d) => d.score));
+export default function PostingTimeChart({data}: Props) {
+  const chartData = data ?? []
+  const maxScore = chartData.length > 0 ? Math.max(...chartData.map((d) => d.score)) : 0
 
   return (
     <Card>
@@ -38,7 +34,7 @@ export default function PostingTimeChart() {
         <div style={{ height: 280 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={MOCK_DATA}
+              data={chartData}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -52,7 +48,7 @@ export default function PostingTimeChart() {
                 }}
               />
               <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                {MOCK_DATA.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell
                     key={index}
                     fill={
