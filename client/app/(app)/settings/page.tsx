@@ -168,6 +168,7 @@ export default function SettingsPage() {
         type: "success",
         message: "Nama berhasil diperbarui.",
       });
+      // setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
       setProfileFeedback({ type: "error", message: err.message });
     } finally {

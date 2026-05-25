@@ -1,4 +1,3 @@
-// app/(app)/dashboard/page.tsx
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -24,8 +23,6 @@ export default async function DashboardPage() {
 
   if (!account) redirect("/onboarding");
 
-  const serializedAccount = JSON.parse(JSON.stringify(account));
-
   const analysis = await db
     .collection("analyses")
     .findOne(
@@ -33,7 +30,11 @@ export default async function DashboardPage() {
       { sort: { createdAt: -1 } },
     );
 
-  const typedAnalysis = analysis as unknown as Analysis | null;
+  const serializedAccount = JSON.parse(JSON.stringify(account)) as Account;
+  const serializedAnalysis = analysis
+    ? (JSON.parse(JSON.stringify(analysis)) as Analysis)
+    : null;
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,12 +44,9 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <KpiCards
-        account={serializedAccount as Account}
-        analysis={typedAnalysis}
-      />
+      <KpiCards account={serializedAccount} analysis={serializedAnalysis} />
 
-      {!analysis && (
+      {!serializedAnalysis && (
         <EmptyState
           title="AI Analysis Belum Tersedia"
           description="Klik tombol di bawah untuk menjalankan analisis AI berdasarkan data akun yang sudah kamu input."
@@ -57,13 +55,15 @@ export default async function DashboardPage() {
         />
       )}
 
-      {analysis && (
+      {serializedAnalysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementChart account={account as unknown as Account} />
-          <NicheBreakdown data={typedAnalysis?.nicheBreakdown} />
-          <AudienceDonut account={serializedAccount as Account} />
-          <ProductMatchChart recommendations={typedAnalysis?.recommendations} />
-          <PostingTimeChart account={serializedAccount as Account} />
+          <EngagementChart account={serializedAccount} />
+          <NicheBreakdown data={serializedAnalysis.nicheBreakdown} />
+          <AudienceDonut account={serializedAccount} />
+          <ProductMatchChart
+            recommendations={serializedAnalysis.recommendations}
+          />
+          <PostingTimeChart account={serializedAccount} />
         </div>
       )}
     </div>
