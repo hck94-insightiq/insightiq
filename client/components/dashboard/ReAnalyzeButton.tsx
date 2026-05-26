@@ -46,7 +46,7 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
         className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-background hover:text-foreground transition-colors disabled:opacity-50"
       >
         <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-        {loading ? "Fetching..." : "Re-fetch"}
+        {loading ? "Fetching..." : "Re-analyze"}
       </button>
     );
   }

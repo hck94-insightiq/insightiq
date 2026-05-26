@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEffect, useState } from "react";
 
 const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
   "/dashboard": { label: "Dashboard", sublabel: "OVERVIEW" },
@@ -50,6 +51,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { label, sublabel } = getPageTitle(pathname);
+  const [mounted, setMounted] = useState(false);
 
   const initials = session?.user?.name
     ? session.user.name
@@ -59,6 +61,8 @@ export default function Navbar() {
         .toUpperCase()
         .slice(0, 2)
     : "U";
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <header className="fixed left-56 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-8 backdrop-blur">
@@ -82,7 +86,15 @@ export default function Navbar() {
           aria-label="Toggle theme"
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          {mounted ? (
+            theme === "dark" ? (
+              <Sun size={17} />
+            ) : (
+              <Moon size={17} />
+            )
+          ) : (
+            <Moon size={17} />
+          )}
         </button>
 
         {/* Avatar dropdown */}

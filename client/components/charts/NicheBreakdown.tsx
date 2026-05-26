@@ -7,54 +7,93 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Cell,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CHART_PALETTE } from "@/lib/chart-colors";
 import { Analysis } from "@/types";
 
+const TEAL = "oklch(0.68 0.13 195)";
+const tealAlpha = (a: number) => `oklch(0.68 0.13 195 / ${a})`;
+
 interface Props {
-  data? : Analysis["nicheBreakdown"]
+  data?: Analysis["nicheBreakdown"];
 }
 
-export default function NicheBreakdown({data}: Props) {
-  const chartData = data?.map((item) => ({niche: item.niche, score: item.score})) ?? []
+export default function NicheBreakdown({ data }: Props) {
+  const chartData =
+    data?.map((item, i) => ({
+      niche: item.niche,
+      score: item.score,
+      fill: i === 0 ? TEAL : tealAlpha(Math.max(0.25, 0.85 - i * 0.12)),
+    })) ?? [];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Niche Breakdown</CardTitle>
-        <CardDescription>
-          Distribusi konten berdasarkan analisis AI
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div style={{ height: 280 }}>
+    <div className="flex flex-col rounded-xl border border-border bg-card">
+      <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-5">
+        <div>
+          <h3 className="text-[15px] font-semibold leading-tight tracking-tight">
+            Niche Breakdown
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Distribusi konten berdasarkan analisis AI
+          </p>
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
+          SCORE 0–100
+        </span>
+      </div>
+      <div className="flex-1 px-5 pb-5">
+        <div style={{ height: 260 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={chartData}
-              margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+              margin={{ top: 6, right: 20, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 100]} className="text-xs" />
-              <YAxis type="category" dataKey="niche" className="text-xs" width={60} />
-              <Tooltip
-                formatter={(value) => [`${value}/100`, "Score"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
+              <CartesianGrid
+                strokeDasharray="3 4"
+                horizontal={false}
+                stroke="var(--border)"
+              />
+              <XAxis
+                type="number"
+                domain={[0, 100]}
+                tickLine={false}
+                axisLine={false}
+                tick={{
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono, monospace)",
+                  fill: "var(--muted-foreground)",
                 }}
               />
-              <Bar dataKey="score" radius={[0, 6, 6, 0]}>
-                {chartData.map((_, index) => (
-                  <Cell key={index} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
-                ))}
-              </Bar>
+              <YAxis
+                type="category"
+                dataKey="niche"
+                tickLine={false}
+                axisLine={false}
+                width={130}
+                tick={{
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono, monospace)",
+                  fill: "var(--muted-foreground)",
+                }}
+              />
+              <Tooltip
+                cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+                contentStyle={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: "var(--foreground)", fontWeight: 500 }}
+                itemStyle={{ color: "var(--muted-foreground)" }}
+                formatter={(v) => [`${v as number}/100`, "Score"]}
+              />
+              <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

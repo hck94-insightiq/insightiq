@@ -161,7 +161,7 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
       );
 
       const seen = new Set<string>();
-      const merged: TokopediaSearch[] = [];
+      const merged: TokopediaProduct[] = [];
       for (const batch of results) {
         for (const p of batch) {
           const key = p.url ?? p.name;
