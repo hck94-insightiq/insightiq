@@ -9,6 +9,7 @@ import {
   MessageSquare,
   ShieldCheck,
   Heart,
+  Users,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,10 @@ const navItems = [
   { href: "/recommendations", label: "Recommendations", icon: ShoppingBag },
   { href: "/wishlist", label: "Wishlist", icon: Heart },
   { href: "/dashboard/chat", label: "AI Consultant", icon: MessageSquare },
+];
+const adminItems = [
+  { href: "/admin", label: "Overview", icon: ShieldCheck },
+  { href: "/admin/users", label: "Users", icon: Users },
 ];
 
 export default function Sidebar() {
@@ -67,18 +72,25 @@ export default function Sidebar() {
             <p className="mt-4 mb-1 px-2 text-[10px] font-semibold tracking-widest text-muted-foreground/50 uppercase">
               Admin
             </p>
-            <Link
-              href="/admin"
-              className={cn(
-                "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
-                pathname.startsWith("/admin")
-                  ? "bg-teal-500/10 text-teal-700 dark:text-teal-400"
-                  : "text-muted-foreground hover:bg-background hover:text-foreground",
-              )}
-            >
-              <ShieldCheck size={16} />
-              Admin Panel
-            </Link>
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-teal-500/10 text-teal-700 dark:text-teal-400"
+                      : "text-muted-foreground hover:bg-background hover:text-foreground",
+                  )}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              );
+            })}
           </>
         )}
       </nav>
