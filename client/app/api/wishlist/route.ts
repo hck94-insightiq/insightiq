@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       shopUrl,
     } = body;
 
-    if (!productId || title) {
+    if (!productId || !title) {
       return NextResponse.json(
         { error: "Data product tidak lengkap" },
         { status: 400 },
@@ -101,7 +101,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const db = await getDb();
-    await db.collection("wishlists").deleteOne({
+    await db.collection("wishlist").deleteOne({
       userId: new ObjectId(session.user.id),
       productId,
     });

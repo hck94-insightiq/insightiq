@@ -9,7 +9,7 @@ interface Props {
     title: string;
     price: string;
     priceNumber: number;
-    imageUrl: string; 
+    imageUrl: string;
     productUrl: string;
     shopName: string;
     shopUrl: string;
@@ -53,14 +53,14 @@ export function WishlistButton({ product }: Props) {
         toggleWishlist();
       }}
       disabled={loading}
-      className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+      className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
     >
       <Heart
         size={14}
         className={
           wished
             ? "fill-rose-500 text-rose-500"
-            : "text-gray-300 dark:text-white/20"
+            : "text-gray-400 hover:text-rose-400"
         }
       />
     </button>
