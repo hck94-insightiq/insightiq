@@ -48,7 +48,7 @@ export default function EngagementChart({ account }: Props) {
         </span>
       </div>
       <div className="flex-1 px-5 pb-5">
-        <div style={{ height: 260 }}>
+        <div style={{ height: 260, minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
@@ -94,7 +94,7 @@ export default function EngagementChart({ account }: Props) {
                   "Total",
                 ]}
               />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={120} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={150} />
             </BarChart>
           </ResponsiveContainer>
         </div>

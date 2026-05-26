@@ -161,7 +161,7 @@ export default async function AnalysisPage() {
         </div>
         <Link
           href="/recommendations"
-          className="group relative inline-flex h-11 shrink-0 items-center gap-2.5 overflow-hidden rounded-xl bg-teal-500 px-5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-colors"
+          className="group relative inline-flex h-11 shrink-0 items-center gap-2.5 overflow-hidden rounded-xl bg-teal-500 px-5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-colors"
         >
           {/* Shimmer swish */}
           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent" />

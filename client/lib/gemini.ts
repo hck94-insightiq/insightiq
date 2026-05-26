@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { generateObject, generateText } from "ai";
+import { generateObject } from "ai";
 import { z } from "zod";
 import type { Account } from "@/types";
 
@@ -59,7 +59,7 @@ export const analysisSchema = z.object({
               "seperti yang diketik orang saat belanja online. " +
               "Contoh bagus: 'sarung jempol gaming', 'kopi susu kemasan', 'earphone gaming murah'. " +
               "Contoh buruk: 'Sarung Jempol / Finger Sleeve Gaming untuk Mobile Legends', " +
-              "'Gantungan Kunci Akrilik Karakter HoK'."
+              "'Gantungan Kunci Akrilik Karakter HoK'.",
           ),
       }),
     )

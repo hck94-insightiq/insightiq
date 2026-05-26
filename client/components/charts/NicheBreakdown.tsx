@@ -42,7 +42,7 @@ export default function NicheBreakdown({ data }: Props) {
         </span>
       </div>
       <div className="flex-1 px-5 pb-5">
-        <div style={{ height: 260 }}>
+        <div style={{ height: 260, minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
@@ -89,7 +89,7 @@ export default function NicheBreakdown({ data }: Props) {
                 itemStyle={{ color: "var(--muted-foreground)" }}
                 formatter={(v) => [`${v as number}/100`, "Score"]}
               />
-              <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={18} />
+              <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={100} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -9,14 +9,27 @@ export default withAuth(
     if (path.startsWith("/admin") && token?.role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
+    if ((path === "/login" || path === "/register") && token) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }: { token: any; req: any }) => {
+        const path = req.nextUrl.pathname;
+        if (path === "/login" || path === "/register") return true;
+        return !!token;
+      },
     },
   },
 );
 
 export const config = {
-  matcher: ["/onboarding", "/dashboard/:path*", "/admin/:path*"],
+  matcher: [
+    "/login",
+    "/register",
+    "/onboarding",
+    "/dashboard/:path*",
+    "/admin/:path*",
+  ],
 };
