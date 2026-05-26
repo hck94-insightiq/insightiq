@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/shared/EmptyState";
+import { WishlistButton } from "@/components/shared/WishlistButton";
 
 interface Recommendation {
   category: string;
@@ -22,10 +23,14 @@ interface Recommendation {
 
 interface TokopediaProduct {
   name: string;
-  price: number | null;
+  price: string | null;
+  priceNumber: number | null;
   rating: number | null;
   url: string | null;
   image: string | null;
+  productId: string | null;
+  shopName: string | null;
+  shopUrl: string | null;
 }
 
 function MatchScoreBadge({ score }: { score: number }) {
@@ -73,8 +78,25 @@ function TokopediaResults({
             href={p.url ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col gap-2 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:border-teal-300 dark:hover:border-teal-500/30 transition-colors bg-gray-50 dark:bg-white/5 group"
+            className="flex flex-col gap-2 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:border-teal-300 dark:hover:border-teal-500/30 transition-colors bg-gray-50 dark:bg-white/5 group relative"
           >
+            {p.productId && (
+              <div className="absolute top-2 right-2 z-10">
+                <WishlistButton
+                  product={{
+                    productId: p.productId,
+                    title: p.name,
+                    price: p.price ?? "",
+                    priceNumber: p.priceNumber ?? 0,
+                    imageUrl: p.image ?? "",
+                    productUrl: p.url ?? "",
+                    shopName: p.shopName ?? "",
+                    shopUrl: p.shopUrl ?? "",
+                  }}
+                />
+              </div>
+            )}
+
             {p.image && (
               <img
                 src={p.image}

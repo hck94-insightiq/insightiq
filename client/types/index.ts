@@ -87,6 +87,20 @@ export interface AnalysisOutput {
   recommendations: Recommendation[];
 }
 
+export interface WishlistItem {
+  _id: string;
+  userId: string;
+  productId: string;
+  title: string;
+  price: string;
+  priceNumber: number;
+  imageUrl: string;
+  productUrl: string;
+  shopName: string;
+  shopUrl: string;
+  createdAt: Date;
+}
+
 // NextAuth module augmentation
 
 declare module "next-auth" {
