@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 import type { Account } from "@/types";
 
@@ -137,4 +137,111 @@ function buildAnalysisPrompt(account: Account): string {
 
 Analisis akun ini sekarang.
     `.trim();
+}
+
+const reportSchema = z.object({
+  polaKonten: z
+    .string()
+    .describe(
+      "2-3 kalimat analisis pola konten: hari terbaik, hashtag dominan, dan apa yang membuat konten ini konsisten",
+    ),
+  profilAudience: z
+    .string()
+    .describe(
+      "2-3 kalimat tentang siapa audience-nya, engagement rate dalam konteks, dan apa artinya untuk strategi konten",
+    ),
+  sinyalEngagement: z
+    .string()
+    .describe(
+      "2-3 kalimat interpretasi breakdown engagement (likes vs saves vs comments) dan apa sinyal perilaku yang bisa dibaca dari sana",
+    ),
+  peluangBelumDioptimalkan: z
+    .string()
+    .describe(
+      "2-3 kalimat tentang niche atau area yang belum dimanfaatkan, kenapa relevan, dan bagaimana potensinya",
+    ),
+});
+
+export type AnalysisReport = z.infer<typeof reportSchema>;
+
+export async function generateAnalysisReport(
+  account: Account,
+  analysis: AnalysisOutput,
+): Promise<AnalysisReport> {
+  const engagementRate =
+    account.avgViews > 0
+      ? (
+          ((account.avgLikes + account.avgComments + account.avgShares) /
+            account.avgViews) *
+          100
+        ).toFixed(2)
+      : "0";
+
+  const total =
+    (account.engagementBreakdown?.likes ?? 0) +
+    (account.engagementBreakdown?.comments ?? 0) +
+    (account.engagementBreakdown?.shares ?? 0) +
+    (account.engagementBreakdown?.saves ?? 0);
+
+  const engagementBreakdownText =
+    total > 0
+      ? `Likes: ${(((account.engagementBreakdown?.likes ?? 0) / total) * 100).toFixed(1)}%, Comments: ${(((account.engagementBreakdown?.comments ?? 0) / total) * 100).toFixed(1)}%, Shares: ${(((account.engagementBreakdown?.shares ?? 0) / total) * 100).toFixed(1)}%, Saves: ${(((account.engagementBreakdown?.saves ?? 0) / total) * 100).toFixed(1)}%`
+      : "Tidak tersedia";
+
+  const bestDay =
+    account.postingDays?.length > 0
+      ? account.postingDays.reduce((best: any, d: any) =>
+          d.avgViews > best.avgViews ? d : best,
+        )
+      : null;
+
+  const nicheBreakdownText = analysis.nicheBreakdown
+    .map((n) => `${n.niche} (${n.score}/100)`)
+    .join(", ");
+
+  const prompt = `
+Kamu adalah analis konten TikTok profesional Indonesia. Tugas kamu adalah menulis laporan analisis akun yang insightful, spesifik, dan berbasis data — bukan generik.
+
+# Data Akun
+- Username: @${account.tiktokUsername}
+- Followers: ${account.followers.toLocaleString("id-ID")}
+- Total Video: ${account.totalVideos}
+- Engagement Rate: ${engagementRate}%
+- Avg Views: ${account.avgViews.toLocaleString("id-ID")}
+- Avg Likes: ${account.avgLikes.toLocaleString("id-ID")}
+- Avg Comments: ${account.avgComments.toLocaleString("id-ID")}
+- Avg Shares: ${account.avgShares.toLocaleString("id-ID")}
+- Avg Saves: ${account.avgSaves?.toLocaleString("id-ID") ?? "0"}
+- Hashtag dominan: ${account.hashtags
+    .slice(0, 5)
+    .map((h: string) => `#${h}`)
+    .join(", ")}
+- Hari terbaik posting: ${bestDay ? `${bestDay.day} (avg ${bestDay.avgViews.toLocaleString("id-ID")} views)` : "—"}
+- Engagement breakdown: ${engagementBreakdownText}
+
+# Hasil AI Analysis
+- Primary Niche: ${analysis.primaryNiche}
+- Secondary Niche: ${analysis.secondaryNiche}
+- Confidence: ${analysis.confidenceScore}%
+- Audience: ${analysis.audienceProfile.ageRange}, daya beli ${analysis.audienceProfile.purchasePower}
+- Niche breakdown: ${nicheBreakdownText}
+
+# Instruksi
+Tulis laporan analisis dengan 4 bagian berikut. Setiap bagian harus:
+- Spesifik ke data akun ini, bukan generik
+- Berbahasa Indonesia yang natural dan profesional
+- Memberikan insight yang tidak langsung terlihat dari angka mentah
+- 2-3 kalimat per bagian
+
+Jangan gunakan bullet point. Tulis dalam bentuk paragraf mengalir.
+`.trim();
+
+  const { object } = await generateObject({
+    model: MODEL,
+    schema: reportSchema,
+    prompt,
+    temperature: 0.7,
+  });
+
+  return object;
 }
