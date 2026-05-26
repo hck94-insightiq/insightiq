@@ -41,6 +41,7 @@ export interface Account {
   avgLikes: number;
   avgComments: number;
   avgShares: number;
+  avgSaves: number;
   hashtags: string[];
   postingDays: PostingDay[];
   engagementBreakdown: EngagementBreakdown;

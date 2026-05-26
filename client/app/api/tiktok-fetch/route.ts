@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
   const avgLikes = mean(videos.map((v: any) => v.diggCount ?? 0));
   const avgComments = mean(videos.map((v: any) => v.commentCount ?? 0));
   const avgShares = mean(videos.map((v: any) => v.shareCount ?? 0));
+  const avgSaves = mean(videos.map((v: any) => v.collectCount ?? 0));
 
   const hashtagSet = new Set<string>();
   for (const v of videos) {
@@ -155,6 +156,7 @@ export async function POST(req: NextRequest) {
         avgLikes,
         avgComments,
         avgShares,
+        avgSaves,
         hashtags,
         postingDays,
         engagementBreakdown,
