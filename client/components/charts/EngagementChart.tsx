@@ -26,8 +26,7 @@ interface Props {
 
 export default function EngagementChart({ account }: Props) {
   const chartData = [
-    { metric: "Likes", value: account?.avgLikes ?? 0, fill: TEAL },
-    { metric: "Comments", value: account?.avgComments ?? 0, fill: TEAL_DIM },
+    { metric: "Comments", value: account?.avgComments ?? 0, fill: TEAL },
     { metric: "Shares", value: account?.avgShares ?? 0, fill: TEAL_DIM },
     { metric: "Saves", value: account?.avgSaves ?? 0, fill: TEAL_DIM },
   ];
@@ -40,7 +39,7 @@ export default function EngagementChart({ account }: Props) {
             Engagement Metrics
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Rata-rata likes, comments, dan shares per video
+            Rata-rata per video dari 20 video terakhir
           </p>
         </div>
         <span className="inline-flex items-center rounded-full bg-teal-500/10 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-teal-700 dark:text-teal-400 shrink-0">
@@ -52,7 +51,7 @@ export default function EngagementChart({ account }: Props) {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 10, right: 8, left: -10, bottom: 0 }}
+              margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
             >
               <CartesianGrid
                 strokeDasharray="3 4"
@@ -73,6 +72,7 @@ export default function EngagementChart({ account }: Props) {
                 tickFormatter={formatNum}
                 tickLine={false}
                 axisLine={false}
+                width={50}
                 tick={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono, monospace)",
@@ -91,10 +91,10 @@ export default function EngagementChart({ account }: Props) {
                 itemStyle={{ color: "var(--muted-foreground)" }}
                 formatter={(v) => [
                   (v as number).toLocaleString("id-ID"),
-                  "Total",
+                  "Avg per video",
                 ]}
               />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={150} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={100} />
             </BarChart>
           </ResponsiveContainer>
         </div>

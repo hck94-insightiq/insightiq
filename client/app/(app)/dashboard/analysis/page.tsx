@@ -15,8 +15,10 @@ import {
   FileText,
   Activity,
   Lightbulb,
+  ChevronDown,
 } from "lucide-react";
 import { ReAnalyzeButton } from "@/components/dashboard/ReAnalyzeButton";
+import { AIAnalysisWheel } from "@/components/dashboard/AIAnalysisWheel";
 import EmptyState from "@/components/shared/EmptyState";
 
 function toTitleCase(str: string): string {
@@ -34,6 +36,49 @@ function fmtViews(n: number): string {
   if (n === 0) return "0";
   return n.toLocaleString("id-ID");
 }
+
+// ─── Derive key insight per section from real data ────────────────────────────
+
+function derivePolaKey(account: any, bestDay: any): string {
+  const day = bestDay?.day ?? "—";
+  const topTags = (account.hashtags ?? [])
+    .slice(0, 2)
+    .map((h: string) => `#${h}`)
+    .join(", ");
+  return topTags ? `${day} terbaik · ${topTags}` : `${day} terbaik`;
+}
+
+function deriveAudienceKey(analysis: any): string {
+  const age = analysis.audienceProfile?.ageRange ?? "—";
+  const power = toTitleCase(
+    (analysis.audienceProfile?.purchasePower ?? "—").split(" ")[0],
+  );
+  return `${age} · Daya beli ${power}`;
+}
+
+function deriveEngagementKey(account: any): string {
+  const bd = account.engagementBreakdown;
+  if (!bd) return "—";
+  const total =
+    (bd.likes ?? 0) + (bd.comments ?? 0) + (bd.shares ?? 0) + (bd.saves ?? 0);
+  if (total === 0) return "—";
+  const likePct = Math.round(((bd.likes ?? 0) / total) * 100);
+  const savePct = Math.round(((bd.saves ?? 0) / total) * 100);
+  const dominant =
+    likePct >= 70 ? "entertaining" : savePct >= 10 ? "edukasional" : "seimbang";
+  return `${likePct}% Likes · Konten ${dominant}`;
+}
+
+function derivePeluangKey(analysis: any): string {
+  const niches = [...(analysis.nicheBreakdown ?? [])].sort(
+    (a: any, b: any) => a.score - b.score,
+  );
+  if (niches.length === 0) return "—";
+  const lowest = niches[0] as any;
+  return `${lowest.niche} (${lowest.score}/100) terendah`;
+}
+
+// ─── Confidence Ring ──────────────────────────────────────────────────────────
 
 function ConfidenceRing({ value }: { value: number }) {
   const r = 48;
@@ -75,6 +120,67 @@ function ConfidenceRing({ value }: { value: number }) {
     </div>
   );
 }
+
+// ─── Accordion Item ───────────────────────────────────────────────────────────
+
+function AccordionItem({
+  number,
+  icon: Icon,
+  label,
+  keyValue,
+  detail,
+  teal,
+}: {
+  number: string;
+  icon: any;
+  label: string;
+  keyValue: string;
+  detail: string;
+  teal?: boolean;
+}) {
+  return (
+    <details
+      className={`group rounded-2xl border ${teal ? "border-teal-500/20 bg-teal-500/[0.04]" : "border-border bg-card"} overflow-hidden`}
+    >
+      <summary className="flex cursor-pointer list-none select-none items-center gap-3.5 p-5 hover:bg-muted/20 transition-colors">
+        {/* Numbered badge */}
+        <div
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-semibold ${teal ? "bg-teal-500/15 text-teal-600 dark:text-teal-400" : "bg-teal-500/10 text-teal-600 dark:text-teal-400"}`}
+        >
+          {number}
+        </div>
+
+        {/* Icon */}
+        <Icon size={15} className="shrink-0 text-teal-600 dark:text-teal-400" />
+
+        {/* Label + key value */}
+        <div className="flex-1 min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground leading-none mb-1">
+            {label}
+          </p>
+          <p className="text-sm font-semibold leading-tight truncate">
+            {keyValue}
+          </p>
+        </div>
+
+        {/* Chevron */}
+        <ChevronDown
+          size={16}
+          className="shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+        />
+      </summary>
+
+      {/* Detail */}
+      <div className="border-t border-border/50 px-5 pb-5 pt-4">
+        <p className="text-[14px] leading-relaxed text-foreground/75">
+          {detail}
+        </p>
+      </div>
+    </details>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function AnalysisPage() {
   const session = await getServerSession(authOptions);
@@ -131,7 +237,7 @@ export default async function AnalysisPage() {
 
   return (
     <div className="space-y-5">
-      {/* ── Page header ─────────────────────────────────────────────────── */}
+      {/* Page header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -147,7 +253,7 @@ export default async function AnalysisPage() {
         <ReAnalyzeButton tiktokUsername={tiktokUsername} />
       </div>
 
-      {/* ── Featured CTA ────────────────────────────────────────────────── */}
+      {/* Featured CTA */}
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-teal-500/25 bg-teal-500/[0.06] px-6 py-4">
         <div>
           <p className="text-sm font-semibold text-foreground">
@@ -161,9 +267,8 @@ export default async function AnalysisPage() {
         </div>
         <Link
           href="/recommendations"
-          className="group relative inline-flex h-11 shrink-0 items-center gap-2.5 overflow-hidden rounded-xl bg-teal-500 px-5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-colors"
+          className="group relative inline-flex h-11 shrink-0 items-center gap-2.5 overflow-hidden rounded-xl bg-teal-500 px-5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-colors"
         >
-          {/* Shimmer swish */}
           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           <ShoppingBag size={16} />
           Lihat Rekomendasi
@@ -174,7 +279,7 @@ export default async function AnalysisPage() {
         </Link>
       </div>
 
-      {/* ── Hero card: Niche + Confidence ───────────────────────────────── */}
+      {/* Hero card: Niche + Confidence */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-7">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full"
@@ -192,11 +297,11 @@ export default async function AnalysisPage() {
               {toTitleCase(analysis.primaryNiche)}
             </h2>
             {analysis.secondaryNiche && (
-              <div className="mt-4 flex items-center gap-2.5 text-sm text-muted-foreground">
+              <div className="mt-4 flex items-center gap-2.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-400">
                   <Target size={11} /> Primary
                 </span>
-                <span>·</span>
+                <span className="text-muted-foreground">·</span>
                 <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                   Secondary: {analysis.secondaryNiche}
                 </span>
@@ -207,98 +312,26 @@ export default async function AnalysisPage() {
         </div>
       </div>
 
-      {/* ── AI Analysis Report ───────────────────────────────────────────── */}
-      {analysis.analysisReport && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-teal-700 dark:text-teal-400">
-              // AI ANALYSIS REPORT
-            </p>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {/* 01 Pola Konten */}
-            <div className="relative rounded-2xl border border-border bg-card p-5">
-              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
-                01
-              </span>
-              <div className="mb-3 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
-                  <FileText
-                    size={15}
-                    className="text-teal-600 dark:text-teal-400"
-                  />
-                </div>
-                <p className="text-sm font-semibold">Pola Konten</p>
-              </div>
-              <p className="text-[14px] leading-relaxed text-foreground/75">
-                {analysis.analysisReport.polaKonten}
-              </p>
-            </div>
-
-            {/* 02 Profil Audience */}
-            <div className="relative rounded-2xl border border-border bg-card p-5">
-              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
-                02
-              </span>
-              <div className="mb-3 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
-                  <Users
-                    size={15}
-                    className="text-teal-600 dark:text-teal-400"
-                  />
-                </div>
-                <p className="text-sm font-semibold">Profil Audience</p>
-              </div>
-              <p className="text-[14px] leading-relaxed text-foreground/75">
-                {analysis.analysisReport.profilAudience}
-              </p>
-            </div>
-
-            {/* 03 Sinyal Engagement */}
-            <div className="relative rounded-2xl border border-border bg-card p-5">
-              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
-                03
-              </span>
-              <div className="mb-3 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
-                  <Activity
-                    size={15}
-                    className="text-teal-600 dark:text-teal-400"
-                  />
-                </div>
-                <p className="text-sm font-semibold">Sinyal Engagement</p>
-              </div>
-              <p className="text-[14px] leading-relaxed text-foreground/75">
-                {analysis.analysisReport.sinyalEngagement}
-              </p>
-            </div>
-
-            {/* 04 Peluang Belum Dioptimalkan */}
-            <div className="relative rounded-2xl border border-teal-500/20 bg-teal-500/[0.04] p-5">
-              <span className="absolute right-4 top-4 font-mono text-[11px] text-teal-500/30">
-                04
-              </span>
-              <div className="mb-3 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/15">
-                  <Lightbulb
-                    size={15}
-                    className="text-teal-600 dark:text-teal-400"
-                  />
-                </div>
-                <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
-                  Peluang Belum Dioptimalkan
-                </p>
-              </div>
-              <p className="text-[14px] leading-relaxed text-foreground/75">
-                {analysis.analysisReport.peluangBelumDioptimalkan}
-              </p>
-            </div>
-          </div>
+      {/* AI Analysis Report — Accordion */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-teal-700 dark:text-teal-400">
+            // AI ANALYSIS REPORT
+          </p>
+          <div className="flex-1 h-px bg-border" />
         </div>
-      )}
+        <AIAnalysisWheel
+          postingDays={postingDays}
+          hashtags={account.hashtags ?? []}
+          engagementBreakdown={account.engagementBreakdown}
+          audienceProfile={analysis.audienceProfile}
+          nicheBreakdown={analysis.nicheBreakdown}
+          analysisReport={analysis.analysisReport}
+          bestDay={bestDay}
+        />
+      </div>
 
-      {/* ── Section divider ─────────────────────────────────────────────── */}
+      {/* Section divider */}
       <div className="flex items-center gap-3 pt-1">
         <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground/50">
           // DETAIL ANALYSIS
@@ -306,77 +339,24 @@ export default async function AnalysisPage() {
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* ── Nuance + Audience Profile ────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-        {/* Nuance */}
-        <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-2.5">
-            <TrendingUp
-              size={17}
-              className="text-teal-600 dark:text-teal-400"
-            />
-            <div>
-              <h3 className="text-[15px] font-semibold leading-tight tracking-tight">
-                Nuance & Character
-              </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Karakter unik akun kamu menurut AI
-              </p>
-            </div>
-          </div>
-          <p className="text-[15px] leading-relaxed text-foreground/85">
-            {analysis.nuanceDescription}
-          </p>
-        </div>
-
-        {/* Audience Profile */}
-        <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <Users size={17} className="text-teal-600 dark:text-teal-400" />
-              <div>
-                <h3 className="text-[15px] font-semibold leading-tight tracking-tight">
-                  Audience Profile
-                </h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Estimasi demografi audience
-                </p>
-              </div>
-            </div>
-            <span className="shrink-0 rounded-full border border-border bg-muted px-2.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              AI-Estimated
-            </span>
-          </div>
-
-          {/* AI prose description */}
-          {analysis.analysisReport?.profilAudience && (
-            <p className="mb-4 text-[13px] leading-relaxed text-foreground/65 border-b border-border pb-4">
-              {analysis.analysisReport.profilAudience}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="mb-4 flex items-center gap-2.5">
+          <TrendingUp size={17} className="text-teal-600 dark:text-teal-400" />
+          <div>
+            <h3 className="text-[15px] font-semibold leading-tight tracking-tight">
+              Nuance & Character
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Karakter unik akun kamu menurut AI
             </p>
-          )}
-
-          <div className="flex flex-col gap-3">
-            <div className="rounded-xl border border-border bg-muted/40 px-4 py-3.5">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                Age Range
-              </p>
-              <p className="text-xl font-semibold tracking-tight">
-                {analysis.audienceProfile?.ageRange ?? "—"}
-              </p>
-            </div>
-            <div className="rounded-xl border border-teal-500/25 bg-teal-500/[0.08] px-4 py-3.5">
-              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.06em] text-teal-600 dark:text-teal-400">
-                Purchase Power
-              </p>
-              <p className="text-xl font-semibold tracking-tight">
-                {toTitleCase(analysis.audienceProfile?.purchasePower ?? "—")}
-              </p>
-            </div>
           </div>
         </div>
+        <p className="text-[15px] leading-relaxed text-foreground/85">
+          {analysis.nuanceDescription}
+        </p>
       </div>
 
-      {/* ── Best Posting Days ───────────────────────────────────────────── */}
+      {/* Best Posting Days */}
       {postingDays.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-5 flex items-center gap-2.5">

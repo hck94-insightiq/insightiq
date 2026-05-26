@@ -268,7 +268,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex gap-8 max-w-4xl h-[calc(100vh-7rem)]">
+    <div className="flex gap-8 max-w-4xl h-[calc(100vh-7rem)] -mb-16">
       <nav className="w-48 shrink-0 space-y-1 pt-1">
         {navItems.map((item) => (
           <button
