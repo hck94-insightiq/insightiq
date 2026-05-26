@@ -1,3 +1,6 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { getDb } from "@/lib/mongodb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +27,10 @@ async function getStats() {
   return { users, accounts, analyses, niches };
 }
 export default async function AdminPage() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "admin") {
+    redirect("/dashboard");
+  }
   const stats = await getStats();
 
   return (

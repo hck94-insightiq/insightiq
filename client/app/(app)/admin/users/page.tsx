@@ -13,11 +13,30 @@ import { Users } from "lucide-react";
 
 async function getUsers() {
   const db = await getDb();
-  return db
-    .collection("users")
-    .find({}, { projection: { password: 0 } })
-    .sort({ createdAt: -1 })
-    .toArray();
+  const [users, accounts] = await Promise.all([
+    db
+      .collection("users")
+      .find({}, { projection: { password: 0 } })
+      .sort({ createdAt: -1 })
+      .toArray(),
+    db.collection("accounts").find({}).toArray(),
+  ]);
+
+  const accountMap = new Map(accounts.map((a) => [a.userId.toString(), a]));
+
+  return users.map((u) => {
+    const account = accountMap.get(u._id.toString());
+    return {
+      ...u,
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.createdAt,
+      tiktok: account?.tiktokUsername ?? "-",
+      followers: account?.followers ?? 0,
+    };
+  });
 }
 
 export default async function AdminUsersPage() {
@@ -43,6 +62,8 @@ export default async function AdminUsersPage() {
               <TableRow>
                 <TableHead>Nama</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>TikTok</TableHead>
+                <TableHead>Follower</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Bergabung</TableHead>
               </TableRow>
@@ -51,7 +72,7 @@ export default async function AdminUsersPage() {
               {users.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={6}
                     className="text-center text-gray-400 py-8"
                   >
                     Belum ada user terdaftar.
@@ -62,6 +83,10 @@ export default async function AdminUsersPage() {
                   <TableRow key={u._id.toString()}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell className="text-gray-600">{u.email}</TableCell>
+                    <TableCell className="text-gray-600">{u.tiktok}</TableCell>
+                    <TableCell className="text-gray-600">
+                      {u.followers}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={u.role === "admin" ? "default" : "secondary"}
