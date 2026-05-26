@@ -66,7 +66,7 @@ function TokopediaResults({
       <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase">
         // HASIL TOKOPEDIA
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {products.map((p, i) => (
           <a
             key={i}
@@ -122,15 +122,35 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
     setSearchLoading(true);
     setSearched(true);
     try {
-      const query = rec.examples.length > 0 ? rec.examples[0] : rec.category;
+      const keywords =
+        rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
 
-      const res = await fetch("/api/tokopedia-search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-      const data = await res.json();
-      setProducts(data.products ?? []);
+      const results = await Promise.all(
+        keywords.map((kw) =>
+          fetch("/api/tokopedia-search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: kw }),
+          })
+            .then((r) => r.json())
+            .then((d) => (d.products ?? []) as TokopediaProduct[])
+            .catch(() => [] as TokopediaProduct[]),
+        ),
+      );
+
+      const seen = new Set<string>();
+      const merged: TokopediaSearch[] = [];
+      for (const batch of results) {
+        for (const p of batch) {
+          const key = p.url ?? p.name;
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(p);
+          }
+        }
+      }
+
+      setProducts(merged.slice(0, 6));
     } catch {
       setProducts([]);
     } finally {
