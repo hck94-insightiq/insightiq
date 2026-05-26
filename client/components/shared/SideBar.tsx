@@ -27,22 +27,18 @@ export default function Sidebar() {
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
   return (
-    <aside className="flex flex-col w-56 h-screen bg-gray-950 text-white px-3 py-5 fixed left-0 top-0 border-r border-white/5">
+    <aside className="fixed left-0 top-0 flex h-screen w-56 flex-col border-r border-border bg-muted/40 px-3 py-5">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-2 mb-8">
-        <div className="w-7 h-7 rounded-lg bg-teal-500 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-xs">IQ</span>
-        </div>
-        <span className="text-white font-semibold tracking-tight">
-          InsightIQ
+      <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
+        <span className="relative flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-mono text-sm font-semibold text-background">
+          IQ
+          <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-teal-500" />
         </span>
-      </div>
+        <span className="text-base font-bold tracking-tight">InsightIQ</span>
+      </Link>
 
       {/* Main nav */}
-      <nav className="flex flex-col gap-0.5 flex-1">
-        <p className="text-white/30 text-[10px] font-semibold tracking-widest px-2 mb-1">
-          MAIN
-        </p>
+      <nav className="flex flex-1 flex-col gap-0.5">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -51,10 +47,10 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-teal-500/15 text-teal-400 font-medium"
-                  : "text-white/50 hover:bg-white/5 hover:text-white",
+                  ? "bg-teal-500/10 text-teal-700 dark:text-teal-400"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground",
               )}
             >
               <Icon size={16} />
@@ -63,19 +59,19 @@ export default function Sidebar() {
           );
         })}
 
-        {/* Admin — only visible to admin role */}
+        {/* Admin */}
         {session?.user?.role === "admin" && (
           <>
-            <p className="text-white/30 text-[10px] font-semibold tracking-widest px-2 mt-4 mb-1">
-              ADMIN
+            <p className="mt-4 mb-1 px-2 text-[10px] font-semibold tracking-widest text-muted-foreground/50 uppercase">
+              Admin
             </p>
             <Link
               href="/admin"
               className={cn(
-                "flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium transition-colors",
                 pathname.startsWith("/admin")
-                  ? "bg-teal-500/15 text-teal-400 font-medium"
-                  : "text-white/50 hover:bg-white/5 hover:text-white",
+                  ? "bg-teal-500/10 text-teal-700 dark:text-teal-400"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground",
               )}
             >
               <ShieldCheck size={16} />
