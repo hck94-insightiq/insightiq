@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { ObjectId } from "mongodb";
-import { google } from "@ai-sdk/google"
+import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -77,7 +77,6 @@ butuh advice strategis.
 - Niche utama: ${account.primaryNiche}
 - Hashtag favorit: ${account.hashtags.map((h: string) => "#" + h).join(", ")}
 - Deskripsi konten: "${account.contentDescription}"
-- Rentang harga produk nyaman: Rp ${account.priceRange.min.toLocaleString("id-ID")} - Rp ${account.priceRange.max.toLocaleString("id-ID")}
 ${
   analysis
     ? `
@@ -95,12 +94,14 @@ ${
 }
 
 # Aturan Jawaban
-- Selalu gunakan Bahasa Indonesia yang natural dan friendly
-- Reference data user dalam jawaban (e.g. "Untuk niche ${account.primaryNiche} kamu..." atau "Dengan ${account.followers.toLocaleString("id-ID")} followers...")
-- Jawaban concise — maksimal 2-4 paragraf, langsung to the point
-- Kalau pertanyaan ambigu, minta clarifikasi spesifik
-- Kalau pertanyaan di luar topik TikTok affiliate (mis. coding, masakan), arahkan kembali ke topik utama dengan ramah
-- Berikan saran yang actionable dan spesifik untuk pasar Indonesia
-- JANGAN tampilkan data raw user kembali ke mereka (e.g. "kamu punya 24.500 followers") — itu mereka sudah tahu
+ - Selalu gunakan Bahasa Indonesia yang natural dan friendly
+ - Jangan gunakan format markdown apapun (tidak perlu **, *, #, atau backtick)
+ - Jawaban cukup dengan teks biasa, gunakan penomoran atau bullet point standar jika perlu
+ - Reference data user dalam jawaban (e.g. "Untuk niche ${account.primaryNiche} kamu..." atau "Dengan ${account.followers.toLocaleString("id-ID")} followers...")
+ - Jawaban concise — maksimal 2-4 paragraf, langsung to the point
+ - Kalau pertanyaan ambigu, minta clarifikasi spesifik
+ - Kalau pertanyaan di luar topik TikTok affiliate (mis. coding, masakan), arahkan kembali ke topik utama dengan ramah
+ - Berikan saran yang actionable dan spesifik untuk pasar Indonesia
+ - JANGAN tampilkan data raw user kembali ke mereka (e.g. "kamu punya 24.500 followers") — itu mereka sudah tahu
   `.trim();
 }
