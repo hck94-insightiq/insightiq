@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Send, Loader2, Bot, User, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Send, Sparkles, RotateCcw } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,234 +15,317 @@ interface AccountInfo {
   primaryNiche?: string;
 }
 
-const SUGGESTED_PROMPTS = [
-  "Produk apa yang cocok untuk niche aku?",
-  "Gimana cara ningkatin engagement rate?",
-  "Kapan waktu terbaik untuk posting?",
-  "Berapa harga produk yang ideal untuk audience aku?",
-  "Strategi hashtag yang efektif untuk niche aku?",
+const SUGGESTIONS = [
+  "Produk apa yang paling cocok untuk niche aku?",
+  "Kapan waktu terbaik aku posting?",
+  "Hashtag apa yang sebaiknya aku pakai?",
+  "Gimana caranya naikkin engagement rate aku?",
 ];
+
+// ─── Simple markdown renderer ─────────────────────────────────────────────────
+
+function Markdown({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-0.5">
+      {lines.map((line, i) => {
+        if (!line.trim()) return <div key={i} className="h-2" />;
+        const parts = line
+          .split(/(\*\*[^*]+\*\*)/g)
+          .map((part, j) =>
+            part.startsWith("**") && part.endsWith("**") ? (
+              <strong key={j}>{part.slice(2, -2)}</strong>
+            ) : (
+              part
+            ),
+          );
+        return (
+          <div key={i} className="text-[14px] leading-relaxed">
+            {parts}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Typing dots ──────────────────────────────────────────────────────────────
+
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-3.5">
+      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+function makeInitialMessage(username?: string): Message {
+  return {
+    role: "assistant",
+    content: username
+      ? `Halo! Aku InsightIQ AI — aku sudah tahu data akun **@${username}** kamu. Tanya apa pun soal strategi affiliate, produk, waktu posting, atau hashtag. Aku siap kasih insight berbasis data akun kamu.`
+      : "Halo! Aku InsightIQ AI. Tanya apa pun soal strategi TikTok affiliate kamu — produk, waktu posting, hashtag, atau engagement.",
+  };
+}
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
+  const [account, setAccount] = useState<AccountInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [account, setAccount] = useState<AccountInfo | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [typing, setTyping] = useState(false);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initializedRef = useRef(false);
 
-  // Pre-fill prompt from query string (e.g. coming from wishlist)
+  // Fetch account + set initial message
+  useEffect(() => {
+    fetch("/api/account")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.account) {
+          setAccount(data.account);
+          if (!initializedRef.current) {
+            setMessages([makeInitialMessage(data.account.tiktokUsername)]);
+            initializedRef.current = true;
+          }
+        }
+      })
+      .catch(() => {
+        if (!initializedRef.current) {
+          setMessages([makeInitialMessage()]);
+          initializedRef.current = true;
+        }
+      });
+  }, []);
+
+  // Pre-fill prompt from query string (e.g. from wishlist)
   useEffect(() => {
     const promptFromQuery = searchParams.get("prompt");
     if (promptFromQuery) {
       setInput(decodeURIComponent(promptFromQuery));
-      // Focus textarea so user just needs to press Enter
       setTimeout(() => {
         textareaRef.current?.focus();
-        // Move cursor to end
         const len = decodeURIComponent(promptFromQuery).length;
         textareaRef.current?.setSelectionRange(len, len);
       }, 100);
     }
   }, [searchParams]);
 
+  // Auto-scroll to bottom
   useEffect(() => {
-    fetch("/api/account")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.account) setAccount(data.account);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  async function handleSend(text?: string) {
-    const content = (text ?? input).trim();
-    if (!content || loading) return;
-
-    const userMessage: Message = { role: "user", content };
-    const newMessages = [...messages, userMessage];
-
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/ai-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal menghubungi AI.");
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message },
-      ]);
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Maaf, terjadi kesalahan: ${err.message}`,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-      textareaRef.current?.focus();
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
-  }
+  }, [messages, typing]);
+
+  const send = useCallback(
+    async (text?: string) => {
+      const content = (text ?? input).trim();
+      if (!content || typing) return;
+
+      const userMessage: Message = { role: "user", content };
+      const newMessages = [...messages, userMessage];
+
+      setMessages(newMessages);
+      setInput("");
+      setTyping(true);
+
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+
+      try {
+        const res = await fetch("/api/ai-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: newMessages }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Gagal menghubungi AI.");
+
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.message },
+        ]);
+      } catch (err: any) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Maaf, terjadi kesalahan. Coba lagi.",
+          },
+        ]);
+      } finally {
+        setTyping(false);
+        textareaRef.current?.focus();
+      }
+    },
+    [input, messages, typing],
+  );
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      send();
     }
   }
 
+  function handleReset() {
+    setMessages([makeInitialMessage(account?.tiktokUsername)]);
+    setInput("");
+    textareaRef.current?.focus();
+  }
+
+  const showSuggestions = messages.length <= 1 && !typing;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-88px)]">
-      {account && (
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <div className="w-2 h-2 rounded-full bg-teal-500" />
-          <p className="text-xs text-gray-400 dark:text-white/30">
+    <div className="flex h-[calc(100vh-140px)] flex-col -mb-16">
+      {/* Chat card */}
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
+        {/* Context banner */}
+        <div className="flex items-center gap-2.5 border-b border-border bg-teal-500/5 px-5 py-3">
+          <Sparkles
+            size={14}
+            className="shrink-0 text-teal-600 dark:text-teal-400"
+          />
+          <p className="flex-1 text-xs text-muted-foreground">
             AI tahu data akun kamu —{" "}
-            <span className="font-mono text-gray-600 dark:text-white/50">
-              @{account.tiktokUsername}
-            </span>
-            {account.primaryNiche && (
+            {account ? (
               <>
-                {" "}
-                ·{" "}
-                <span className="capitalize text-gray-600 dark:text-white/50">
-                  {account.primaryNiche}
+                <span className="font-mono font-medium text-foreground">
+                  @{account.tiktokUsername}
                 </span>
+                {account.primaryNiche && (
+                  <>
+                    {" "}
+                    · <span className="capitalize">{account.primaryNiche}</span>
+                  </>
+                )}{" "}
+                · {account.followers.toLocaleString("id-ID")} followers
               </>
-            )}{" "}
-            ·{" "}
-            <span className="text-gray-600 dark:text-white/50">
-              {account.followers.toLocaleString("id-ID")} followers
-            </span>
+            ) : (
+              <span className="text-muted-foreground">Memuat...</span>
+            )}
           </p>
+          <span className="hidden font-mono text-[10px] text-muted-foreground sm:inline">
+            Powered by Gemini 3.5-flash
+          </span>
+          <button
+            onClick={handleReset}
+            className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <RotateCcw size={12} />
+            New chat
+          </button>
         </div>
-      )}
 
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-        {messages.length === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center h-full gap-6 pb-8">
-            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center">
-              <Sparkles size={22} className="text-teal-500" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                AI Consultant siap membantu
-              </h3>
-              <p className="text-sm text-gray-400 dark:text-white/30 max-w-xs">
-                Tanyakan apa saja seputar strategi TikTok affiliate, produk, dan
-                audience kamu.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-              {SUGGESTED_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => handleSend(prompt)}
-                  className="text-xs px-3 py-2 rounded-full border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/50 hover:border-teal-400 hover:text-teal-600 dark:hover:text-teal-400 dark:hover:border-teal-500/50 transition-colors bg-white dark:bg-gray-900"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {messages.map((msg, i) => (
+        {/* Messages */}
+        <div
+          ref={messagesRef}
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto px-5 py-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
+          style={{ minHeight: 0 }}
+        >
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              {m.role === "assistant" && (
+                <div className="mr-2.5 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-500 text-white">
+                  <Sparkles size={13} />
+                </div>
+              )}
               <div
-                key={i}
-                className={`flex gap-3 ${
-                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                className={`max-w-[72%] rounded-2xl px-4 py-3 ${
+                  m.role === "user"
+                    ? "bg-foreground text-background"
+                    : "border border-border bg-muted/60"
                 }`}
               >
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                    msg.role === "assistant"
-                      ? "bg-teal-500/10"
-                      : "bg-gray-100 dark:bg-white/10"
-                  }`}
-                >
-                  {msg.role === "assistant" ? (
-                    <Bot size={14} className="text-teal-500" />
-                  ) : (
-                    <User
-                      size={14}
-                      className="text-gray-500 dark:text-white/50"
-                    />
-                  )}
-                </div>
-
-                <div
-                  className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                    msg.role === "user"
-                      ? "bg-teal-500 text-white rounded-tr-sm"
-                      : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/5 text-gray-800 dark:text-white/80 rounded-tl-sm"
-                  }`}
-                >
-                  {msg.content}
-                </div>
+                {m.role === "assistant" ? (
+                  <Markdown text={m.content} />
+                ) : (
+                  <p className="text-[14px] leading-relaxed">{m.content}</p>
+                )}
               </div>
-            ))}
+            </div>
+          ))}
 
-            {loading && (
-              <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-full bg-teal-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot size={14} className="text-teal-500" />
-                </div>
-                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/5">
-                  <Loader2 size={14} className="animate-spin text-teal-500" />
-                </div>
+          {/* Typing indicator */}
+          {typing && (
+            <div className="flex justify-start">
+              <div className="mr-2.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-500 text-white">
+                <Sparkles size={13} />
               </div>
-            )}
+              <div className="rounded-2xl border border-border bg-muted/60">
+                <TypingDots />
+              </div>
+            </div>
+          )}
 
-            <div ref={bottomRef} />
-          </>
-        )}
-      </div>
-
-      <div className="pt-3 border-t border-gray-200 dark:border-white/5">
-        <div className="flex gap-3 items-end">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Tanya sesuatu... (Enter untuk kirim, Shift+Enter untuk baris baru)"
-            rows={1}
-            className="flex-1 resize-none min-h-[42px] max-h-32 text-sm py-2.5 leading-relaxed"
-          />
-          <Button
-            onClick={() => handleSend()}
-            disabled={loading || !input.trim()}
-            className="bg-teal-500 hover:bg-teal-400 text-white h-[42px] w-[42px] p-0 shrink-0"
-          >
-            {loading ? (
-              <Loader2 size={15} className="animate-spin" />
-            ) : (
-              <Send size={15} />
-            )}
-          </Button>
+          {/* Suggested prompts */}
+          {showSuggestions && (
+            <div className="pt-2">
+              <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                // SUGGESTED PROMPTS
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="rounded-xl border border-border bg-background px-3.5 py-2 text-left text-[13px] font-medium transition-colors hover:border-teal-500/40 hover:bg-teal-500/5 hover:text-teal-700 dark:hover:text-teal-400"
+                  >
+                    <span className="mr-1.5 text-teal-500">›</span>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-        <p className="text-[10px] text-gray-400 dark:text-white/20 mt-2 text-center">
-          AI bisa membuat kesalahan. Verifikasi informasi penting sebelum
-          digunakan.
-        </p>
+
+        {/* Input bar */}
+        <div className="border-t border-border px-5 pb-5 pt-4">
+          <div className="flex items-end gap-2.5">
+            <div className="flex-1 overflow-hidden rounded-xl border border-border bg-background px-4 py-3 focus-within:border-teal-500/60 transition-colors">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Tanya apa pun tentang strategi affiliate kamu…"
+                disabled={typing}
+                className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+                style={{ maxHeight: 120, overflowY: "auto" }}
+                onInput={(e) => {
+                  const el = e.target as HTMLTextAreaElement;
+                  el.style.height = "auto";
+                  el.style.height = el.scrollHeight + "px";
+                }}
+              />
+            </div>
+            <button
+              onClick={() => send()}
+              disabled={!input.trim() || typing}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500 text-white transition-colors hover:bg-teal-400 disabled:opacity-40"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+          <p className="mt-2.5 text-center font-mono text-[10px] text-muted-foreground">
+            Enter untuk kirim · Shift+Enter untuk baris baru · AI bisa membuat
+            kesalahan, verifikasi info penting
+          </p>
+        </div>
       </div>
     </div>
   );

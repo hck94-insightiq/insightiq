@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   ShoppingBag,
   Search,
@@ -9,7 +10,6 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/shared/EmptyState";
 import { WishlistButton } from "@/components/shared/WishlistButton";
 
@@ -33,118 +33,96 @@ interface TokopediaProduct {
   shopUrl: string | null;
 }
 
-function MatchScoreBadge({ score }: { score: number }) {
-  const color =
-    score >= 80
-      ? "bg-teal-500/10 text-teal-600 dark:text-teal-400"
-      : score >= 60
-        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-        : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/40";
+// ─── Tokopedia product card ───────────────────────────────────────────────────
 
+function ProductCard({ p }: { p: TokopediaProduct }) {
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${color}`}>
-      {score}% match
-    </span>
+    <a
+      href={p.url ?? "#"}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-muted/40 transition-colors hover:border-teal-500/40 hover:bg-teal-500/5"
+    >
+      {/* Wishlist button */}
+      {p.productId && (
+        <div className="absolute right-2 top-2 z-10">
+          <WishlistButton
+            product={{
+              productId: p.productId,
+              title: p.name,
+              price: p.price ?? "",
+              priceNumber: p.priceNumber ?? 0,
+              imageUrl: p.image ?? "",
+              productUrl: p.url ?? "",
+              shopName: p.shopName ?? "",
+              shopUrl: p.shopUrl ?? "",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Image area */}
+      <div className="relative aspect-square w-full overflow-hidden bg-muted/60">
+        {p.image ? (
+          <img
+            src={p.image}
+            alt={p.name}
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ShoppingBag size={28} className="text-muted-foreground/30" />
+          </div>
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="flex flex-1 flex-col gap-1 p-2.5">
+        <p className="line-clamp-2 text-[11px] font-medium leading-tight">
+          {p.name}
+        </p>
+        <p className="mt-auto pt-1.5 font-mono text-[12px] font-semibold">
+          {p.price ?? "—"}
+        </p>
+        <div className="flex items-center justify-between">
+          {p.rating && (
+            <span className="flex items-center gap-0.5 text-[11px] text-amber-500">
+              <Star size={10} className="fill-current" /> {p.rating}
+            </span>
+          )}
+          <ExternalLink
+            size={12}
+            className="ml-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+          />
+        </div>
+      </div>
+    </a>
   );
 }
 
-function TokopediaResults({
-  products,
-  loading,
+// ─── Recommendation card ──────────────────────────────────────────────────────
+
+function RecommendationCard({
+  rec,
+  index,
 }: {
-  products: TokopediaProduct[];
-  loading: boolean;
+  rec: Recommendation;
+  index: number;
 }) {
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-white/30 pt-3">
-        <Loader2 size={14} className="animate-spin" />
-        Mencari produk di Tokopedia...
-      </div>
-    );
-  }
-
-  if (products.length === 0) return null;
-
-  console.log("products data:", products);
-
-  return (
-    <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2">
-      <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase">
-        // HASIL TOKOPEDIA
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {products.map((p, i) => (
-          <a
-            key={i}
-            href={p.url ?? "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col gap-2 p-3 rounded-lg border border-gray-100 dark:border-white/5 hover:border-teal-300 dark:hover:border-teal-500/30 transition-colors bg-gray-50 dark:bg-white/5 group relative"
-          >
-            {p.productId && (
-              <div className="absolute top-2 right-2 z-10">
-                <WishlistButton
-                  product={{
-                    productId: p.productId,
-                    title: p.name,
-                    price: p.price ?? "",
-                    priceNumber: p.priceNumber ?? 0,
-                    imageUrl: p.image ?? "",
-                    productUrl: p.url ?? "",
-                    shopName: p.shopName ?? "",
-                    shopUrl: p.shopUrl ?? "",
-                  }}
-                />
-              </div>
-            )}
-
-            {p.image && (
-              <img
-                src={p.image}
-                alt={p.name}
-                className="w-full h-24 object-contain rounded-md bg-white"
-              />
-            )}
-            <p className="text-xs font-medium text-gray-800 dark:text-white/80 line-clamp-2 leading-snug group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-              {p.name}
-            </p>
-            <div className="flex items-center justify-between mt-auto">
-              {p.price && (
-                <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                  {p.price}
-                </p>
-              )}
-              <div className="flex items-center gap-1">
-                {p.rating && (
-                  <>
-                    <Star size={10} className="text-amber-400 fill-amber-400" />
-                    <span className="text-[10px] text-gray-400">
-                      {p.rating}
-                    </span>
-                  </>
-                )}
-                <ExternalLink
-                  size={10}
-                  className="text-gray-300 dark:text-white/20 ml-1"
-                />
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RecommendationCard({ rec }: { rec: Recommendation }) {
   const [products, setProducts] = useState<TokopediaProduct[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [searchState, setSearchState] = useState<"idle" | "loading" | "done">(
+    "idle",
+  );
+  const isTop = index === 0;
 
   async function handleSearch() {
-    setSearchLoading(true);
-    setSearched(true);
+    if (searchState === "done") {
+      setSearchState("idle");
+      setProducts([]);
+      return;
+    }
+
+    setSearchState("loading");
     try {
       const keywords =
         rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
@@ -173,67 +151,153 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
           }
         }
       }
-
       setProducts(merged.slice(0, 6));
+      setSearchState("done");
     } catch {
       setProducts([]);
-    } finally {
-      setSearchLoading(false);
+      setSearchState("idle");
     }
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/5 rounded-xl p-5 space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white capitalize">
-            {rec.category}
-          </h3>
-          <p className="text-xs text-gray-400 dark:text-white/30">
-            {rec.priceRange}
-          </p>
-        </div>
-        <MatchScoreBadge score={rec.matchScore} />
-      </div>
-
-      <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed">
-        {rec.reason}
-      </p>
-
-      {rec.examples.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {rec.examples.map((ex) => (
-            <span
-              key={ex}
-              className="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white/50"
-            >
-              {ex}
-            </span>
-          ))}
+    <div
+      className={`flex flex-col rounded-2xl border bg-card p-6 ${
+        isTop ? "border-teal-500/40" : "border-border"
+      }`}
+    >
+      {/* Top match badge */}
+      {isTop && (
+        <div className="mb-3 flex">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-400">
+            <Sparkles size={11} /> Top match
+          </span>
         </div>
       )}
 
-      {!searched ? (
-        <Button
-          onClick={handleSearch}
-          variant="outline"
-          className="h-8 px-4 text-xs font-semibold gap-2"
+      {/* 3-column grid: badge | content | score+button */}
+      <div
+        className="grid items-start gap-5"
+        style={{ gridTemplateColumns: "52px 1fr 200px" }}
+      >
+        {/* Numbered badge */}
+        <div
+          className={`flex h-[52px] w-[52px] items-center justify-center rounded-xl font-mono text-xl font-semibold ${
+            isTop
+              ? "bg-teal-500 text-white"
+              : "bg-teal-500/10 text-teal-700 dark:text-teal-400"
+          }`}
         >
-          <Search size={13} />
-          Cari di Tokopedia
-        </Button>
-      ) : (
-        <TokopediaResults products={products} loading={searchLoading} />
+          {String(index + 1).padStart(2, "0")}
+        </div>
+
+        {/* Content */}
+        <div className="min-w-0">
+          <h3 className="mb-1 text-[17px] font-semibold leading-tight tracking-tight">
+            {rec.category}
+          </h3>
+          {rec.priceRange && (
+            <p className="mb-3 font-mono text-xs text-muted-foreground">
+              {rec.priceRange}
+            </p>
+          )}
+          {rec.reason && (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {rec.reason}
+            </p>
+          )}
+          {rec.examples.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {rec.examples.map((ex) => (
+                <span
+                  key={ex}
+                  className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground"
+                >
+                  {ex}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Score + button */}
+        <div className="flex flex-col items-end gap-3">
+          <div className="text-right">
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+              MATCH SCORE
+            </p>
+            <p
+              className={`font-mono text-4xl font-semibold leading-none tracking-tight ${
+                isTop ? "text-teal-600 dark:text-teal-400" : ""
+              }`}
+            >
+              {rec.matchScore}
+              <span className="text-xl text-muted-foreground">%</span>
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-teal-500"
+              style={{ width: `${rec.matchScore}%` }}
+            />
+          </div>
+
+          {/* Search button */}
+          <button
+            onClick={handleSearch}
+            disabled={searchState === "loading"}
+            className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
+          >
+            {searchState === "loading" ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Search size={14} />
+            )}
+            {searchState === "done"
+              ? "Tutup"
+              : searchState === "loading"
+                ? "Mencari..."
+                : "Cari di Tokopedia"}
+          </button>
+        </div>
+      </div>
+
+      {/* Tokopedia results — full width below */}
+      {searchState === "done" && products.length > 0 && (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-teal-700 dark:text-teal-400">
+            // HASIL TOKOPEDIA
+          </p>
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+            {products.map((p, i) => (
+              <ProductCard key={i} p={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {searchState === "done" && products.length === 0 && (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
+            Tidak ada produk ditemukan untuk keyword ini.
+          </p>
+        </div>
       )}
     </div>
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function RecommendationsPage() {
+  const { data: session } = useSession();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? "Kamu";
 
   useEffect(() => {
     fetch("/api/recommendations")
@@ -249,7 +313,7 @@ export default function RecommendationsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 gap-2 text-gray-400 dark:text-white/30">
+      <div className="flex items-center justify-center h-48 gap-2 text-muted-foreground">
         <Loader2 size={18} className="animate-spin" />
         <span className="text-sm">Memuat rekomendasi...</span>
       </div>
@@ -258,45 +322,41 @@ export default function RecommendationsPage() {
 
   if (recommendations.length === 0) {
     return (
-      <div className="space-y-6">
-        <EmptyState
-          title="Belum Ada Rekomendasi"
-          description={
-            message ??
-            "Jalankan AI analysis dulu untuk mendapat rekomendasi produk."
-          }
-          icon={<ShoppingBag size={48} />}
-        />
-      </div>
+      <EmptyState
+        title="Belum Ada Rekomendasi"
+        description={
+          message ??
+          "Jalankan AI analysis dulu untuk mendapat rekomendasi produk."
+        }
+        icon={<ShoppingBag size={48} />}
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase mb-0.5">
-            // PRODUCT RECOMMENDATIONS
-          </p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Top kategori produk untuk akun kamu
-          </h1>
-        </div>
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Produk terbaik untuk kamu,{" "}
+          <span className="text-teal-600 dark:text-teal-400">{firstName}</span>
+        </h1>
         {generatedAt && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-white/30">
-            <Sparkles size={12} />
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">
             {new Date(generatedAt).toLocaleDateString("id-ID", {
               day: "numeric",
-              month: "short",
+              month: "long",
               year: "numeric",
-            })}
-          </div>
+            })}{" "}
+            · {recommendations.length} kategori produk
+          </p>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Cards */}
+      <div className="flex flex-col gap-4">
         {recommendations.map((rec, i) => (
-          <RecommendationCard key={i} rec={rec} />
+          <RecommendationCard key={rec.category} rec={rec} index={i} />
         ))}
       </div>
     </div>

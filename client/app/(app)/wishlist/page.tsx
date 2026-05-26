@@ -22,12 +22,12 @@ export default async function WishlistPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase mb-0.5">
-          // WISHLIST
-        </p>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Produk Tersimpan
+        <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">
+          Mulai iklankan produk favoritmu!
         </h1>
+        <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+          {serializedItems.length} produk tersimpan
+        </p>
       </div>
 
       <WishlistCard items={serializedItems} />
