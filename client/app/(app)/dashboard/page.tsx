@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Sparkles, ArrowRight, MessageSquare, Clock } from "lucide-react";
 import KpiCards from "@/components/dashboard/KpiCards";
 import { ReAnalyzeButton } from "@/components/dashboard/ReAnalyzeButton";
+import { AnalysisLoadingOverlay } from "@/components/dashboard/AnalysisLoadingOverlay";
 import EngagementChart from "@/components/charts/EngagementChart";
 import EmptyState from "@/components/shared/EmptyState";
 import NicheBreakdown from "@/components/charts/NicheBreakdown";
@@ -27,7 +28,12 @@ function getInitials(username: string): string {
   return username.replace("@", "").slice(0, 2).toUpperCase();
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ new?: string }>;
+}) {
+  const params = await searchParams;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/login");
 
@@ -60,6 +66,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
+      {params.new === "true" && <AnalysisLoadingOverlay />}
+
       {/* Page header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">

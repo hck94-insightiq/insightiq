@@ -227,17 +227,24 @@ export default function SettingsPage() {
     setTiktokLoading(true);
     setTiktokFeedback(null);
     try {
-      const res = await fetch("/api/tiktok-fetch", {
+      const fetchRes = await fetch("/api/tiktok-fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: tiktokInput }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal re-sync data TikTok.");
+      const fetchData = await fetchRes.json();
+      if (!fetchRes.ok)
+        throw new Error(fetchData.error || "Gagal fetch data TikTok.");
       setTiktokUsername(tiktokInput);
+
+      await fetch("/api/analysis", { method: "DELETE" });
+
+      const analysisRes = await fetch("/api/analysis", { method: "POST" });
+      if (!analysisRes.ok) throw new Error("Gagal menjalankan AI analysis.");
+
       setTiktokFeedback({
         type: "success",
-        message: "Data TikTok berhasil diperbarui.",
+        message: "Data TikTok dan AI analysis berhasil diperbarui.",
       });
     } catch (err: any) {
       setTiktokFeedback({ type: "error", message: err.message });
@@ -323,7 +330,7 @@ export default function SettingsPage() {
                     ) : (
                       <RefreshCw size={14} />
                     )}
-                    Re-fetch
+                    Re-analyze
                   </Button>
                 </div>
                 {tiktokUsername && (
@@ -336,7 +343,7 @@ export default function SettingsPage() {
                         year: "numeric",
                       })}
                     </span>{" "}
-                    · Re-fetch akan trigger AI analysis ulang.
+                    · Re-analyze akan trigger AI analysis ulang.
                   </p>
                 )}
               </div>

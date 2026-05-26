@@ -60,7 +60,7 @@ export default function PostingTimeChart({ account }: Props) {
             Data belum tersedia
           </div>
         ) : (
-          <div style={{ height: 260 }}>
+          <div style={{ height: 260, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -107,7 +107,7 @@ export default function PostingTimeChart({ account }: Props) {
                     "Average Views",
                   ]}
                 />
-                <Bar dataKey="avgViews" radius={[6, 6, 0, 0]} barSize={32} />
+                <Bar dataKey="avgViews" radius={[6, 6, 0, 0]} barSize={100} />
               </BarChart>
             </ResponsiveContainer>
           </div>

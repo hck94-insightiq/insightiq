@@ -43,7 +43,7 @@ export default function OnboardingPage() {
         throw new Error(json.error || "Gagal mengambil data TikTok.");
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard?new=true");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -60,16 +60,16 @@ export default function OnboardingPage() {
         </p>
 
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+        <h1 className="text-4xl font-bold text-foreground mb-3">
           Connect your TikTok account
         </h1>
-        <p className="text-gray-500 text-base mb-10 leading-relaxed">
+        <p className="text-muted-foreground text-base mb-10 leading-relaxed">
           Paste link profil TikTok kamu. Kami akan otomatis ambil data
           followers, engagement, dan hashtag — tidak perlu input manual.
         </p>
 
         {/* Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
           <p className="text-sm font-medium text-gray-700 mb-3">
             TikTok profile URL
           </p>
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <Link2
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 size={16}
               />
               <Input
@@ -113,13 +113,13 @@ export default function OnboardingPage() {
 
           {/* Example pills */}
           <div className="flex items-center gap-2 mt-4 flex-wrap">
-            <span className="text-xs text-gray-400">Coba contoh:</span>
+            <span className="text-xs text-muted-foreground">Coba contoh:</span>
             {EXAMPLES.map((ex) => (
               <button
                 key={ex}
                 type="button"
                 onClick={() => setInput(ex)}
-                className="text-xs px-3 py-1 rounded-full border border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600 transition-colors"
+                className="text-xs px-3 py-1 rounded-full border border-border text-foreground/70 hover:border-teal-400 hover:text-teal-600 transition-colors"
               >
                 {ex}
               </button>

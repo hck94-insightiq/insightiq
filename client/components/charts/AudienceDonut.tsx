@@ -55,7 +55,11 @@ export default function AudienceDonut({ account }: Props) {
         ) : (
           <div
             className="grid items-center gap-5"
-            style={{ height: 260, gridTemplateColumns: "1fr minmax(0,1fr)" }}
+            style={{
+              height: 260,
+              minHeight: 0,
+              gridTemplateColumns: "1fr minmax(0,1fr)",
+            }}
           >
             {/* Donut */}
             <div className="relative h-full">
