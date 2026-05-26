@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
   const { query } = await req.json();
   const rawQuery = query.trim();
   const words = rawQuery.split(/\s+/);
-  const simplifiedQuery = words.length > 4 ? words.slice(0, 4).join(" ") : rawQuery;
+  const simplifiedQuery =
+    words.length > 4 ? words.slice(0, 4).join(" ") : rawQuery;
   console.log("Received query:", query);
   if (!query || typeof query !== "string" || !query.trim()) {
     return NextResponse.json(
@@ -79,6 +80,10 @@ export async function POST(req: NextRequest) {
     rating: item.rating,
     url: item.product_url,
     image: item.image_url,
+    productId: item.product_id,
+    shopName: item.shop_name,
+    shopUrl: item.shop_url,
+    priceNumber: item.price_number,
   }));
 
   return NextResponse.json({ products });

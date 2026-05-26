@@ -66,6 +66,8 @@ function TokopediaResults({
 
   if (products.length === 0) return null;
 
+  console.log("products data:", products);
+
   return (
     <div className="pt-4 border-t border-gray-100 dark:border-white/5 space-y-2">
       <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase">
@@ -161,7 +163,7 @@ function RecommendationCard({ rec }: { rec: Recommendation }) {
       );
 
       const seen = new Set<string>();
-      const merged: TokopediaSearch[] = [];
+      const merged: TokopediaProduct[] = [];
       for (const batch of results) {
         for (const p of batch) {
           const key = p.url ?? p.name;
