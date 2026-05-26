@@ -76,6 +76,12 @@ export interface Analysis {
   nicheBreakdown: Array<{ niche: string; score: number }>;
   recommendations: Recommendation[];
   createdAt: Date;
+  analysisReport?: {
+    polaKonten: string;
+    profilAudience: string;
+    sinyalEngagement: string;
+    peluangBelumDioptimalkan: string;
+  };
 }
 
 export interface AnalysisOutput {

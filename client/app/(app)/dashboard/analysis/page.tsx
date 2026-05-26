@@ -126,13 +126,6 @@ export default async function AnalysisPage() {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  {
-    toTitleCase(analysis.primaryNiche);
-  }
-  {
-    toTitleCase(analysis.audienceProfile?.purchasePower ?? "—");
-  }
-
   return (
     <div className="space-y-5">
       {/* Page header */}
@@ -183,6 +176,57 @@ export default async function AnalysisPage() {
           <ConfidenceRing value={analysis.confidenceScore} />
         </div>
       </div>
+
+      {analysis.analysisReport && (
+        <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+          <div>
+            <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-teal-700 dark:text-teal-400">
+              // AI ANALYSIS REPORT
+            </p>
+            <h3 className="mt-1 text-[15px] font-semibold leading-tight tracking-tight">
+              Ringkasan Analisis Akun
+            </h3>
+          </div>
+
+          <div className="space-y-4 divide-y divide-border">
+            <div className="pt-4 first:pt-0">
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                Pola Konten
+              </p>
+              <p className="text-[15px] leading-relaxed text-foreground/80">
+                {analysis.analysisReport.polaKonten}
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                Profil Audience
+              </p>
+              <p className="text-[15px] leading-relaxed text-foreground/80">
+                {analysis.analysisReport.profilAudience}
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                Sinyal Engagement
+              </p>
+              <p className="text-[15px] leading-relaxed text-foreground/80">
+                {analysis.analysisReport.sinyalEngagement}
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                Peluang yang Belum Dioptimalkan
+              </p>
+              <p className="text-[15px] leading-relaxed text-foreground/80">
+                {analysis.analysisReport.peluangBelumDioptimalkan}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Row 2: Nuance + Audience Profile */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">

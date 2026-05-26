@@ -1,7 +1,7 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
-import { ObjectId } from "mongodb"
-import { analyzeAccount } from "@/lib/gemini";
+import { ObjectId } from "mongodb";
+import { analyzeAccount, generateAnalysisReport } from "@/lib/gemini";
 import { getDb } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
@@ -46,11 +46,13 @@ export async function POST() {
   // Trigger AI analysis
   try {
     const result = await analyzeAccount(account as any);
+    const analysisReport = await generateAnalysisReport(account as any, result);
 
     const analysisDoc = {
       userId,
       accountId: account._id,
       ...result,
+      analysisReport,
       createdAt: new Date(),
     };
 
