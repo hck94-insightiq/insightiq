@@ -11,6 +11,13 @@ export interface User {
   password: string;
   role: Role;
   createdAt: Date;
+  telegramChatId?: string;
+  telegramConnected?: boolean;
+  telegramVerifyCode?: string;
+  telegramVerifyExpiry?: Date;
+  notificationEnabled?: boolean;
+  notificationHour?: number;
+  lastNotificationSentAt?: Date;
 }
 
 // Account (data TikTok dari Apify)
