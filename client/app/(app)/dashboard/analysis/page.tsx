@@ -12,9 +12,16 @@ import {
   ShoppingBag,
   ArrowRight,
   Target,
+  FileText,
+  Activity,
+  Lightbulb,
 } from "lucide-react";
 import { ReAnalyzeButton } from "@/components/dashboard/ReAnalyzeButton";
 import EmptyState from "@/components/shared/EmptyState";
+
+function toTitleCase(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 function fmtDate(iso: string | Date): string {
   return new Date(iso).toLocaleString("id-ID", {
@@ -122,13 +129,9 @@ export default async function AnalysisPage() {
     );
   }
 
-  function toTitleCase(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
   return (
     <div className="space-y-5">
-      {/* Page header */}
+      {/* ── Page header ─────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -144,7 +147,34 @@ export default async function AnalysisPage() {
         <ReAnalyzeButton tiktokUsername={tiktokUsername} />
       </div>
 
-      {/* Hero card: Niche + Confidence */}
+      {/* ── Featured CTA ────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-teal-500/25 bg-teal-500/[0.06] px-6 py-4">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Siap lihat rekomendasi produk?
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Berdasarkan analisis niche dan audience kamu —{" "}
+            {analysis.recommendations?.length ?? 0} kategori produk siap
+            dijelajahi
+          </p>
+        </div>
+        <Link
+          href="/recommendations"
+          className="group relative inline-flex h-11 shrink-0 items-center gap-2.5 overflow-hidden rounded-xl bg-teal-500 px-5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-colors"
+        >
+          {/* Shimmer swish */}
+          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <ShoppingBag size={16} />
+          Lihat Rekomendasi
+          <ArrowRight
+            size={15}
+            className="group-hover:translate-x-0.5 transition-transform"
+          />
+        </Link>
+      </div>
+
+      {/* ── Hero card: Niche + Confidence ───────────────────────────────── */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-7">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full"
@@ -177,50 +207,90 @@ export default async function AnalysisPage() {
         </div>
       </div>
 
+      {/* ── AI Analysis Report ───────────────────────────────────────────── */}
       {analysis.analysisReport && (
-        <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
-          <div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
             <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-teal-700 dark:text-teal-400">
               // AI ANALYSIS REPORT
             </p>
-            <h3 className="mt-1 text-[15px] font-semibold leading-tight tracking-tight">
-              Ringkasan Analisis Akun
-            </h3>
+            <div className="flex-1 h-px bg-border" />
           </div>
-
-          <div className="space-y-4 divide-y divide-border">
-            <div className="pt-4 first:pt-0">
-              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                Pola Konten
-              </p>
-              <p className="text-[15px] leading-relaxed text-foreground/80">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* 01 Pola Konten */}
+            <div className="relative rounded-2xl border border-border bg-card p-5">
+              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
+                01
+              </span>
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
+                  <FileText
+                    size={15}
+                    className="text-teal-600 dark:text-teal-400"
+                  />
+                </div>
+                <p className="text-sm font-semibold">Pola Konten</p>
+              </div>
+              <p className="text-[14px] leading-relaxed text-foreground/75">
                 {analysis.analysisReport.polaKonten}
               </p>
             </div>
 
-            <div className="pt-4">
-              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                Profil Audience
-              </p>
-              <p className="text-[15px] leading-relaxed text-foreground/80">
+            {/* 02 Profil Audience */}
+            <div className="relative rounded-2xl border border-border bg-card p-5">
+              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
+                02
+              </span>
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
+                  <Users
+                    size={15}
+                    className="text-teal-600 dark:text-teal-400"
+                  />
+                </div>
+                <p className="text-sm font-semibold">Profil Audience</p>
+              </div>
+              <p className="text-[14px] leading-relaxed text-foreground/75">
                 {analysis.analysisReport.profilAudience}
               </p>
             </div>
 
-            <div className="pt-4">
-              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                Sinyal Engagement
-              </p>
-              <p className="text-[15px] leading-relaxed text-foreground/80">
+            {/* 03 Sinyal Engagement */}
+            <div className="relative rounded-2xl border border-border bg-card p-5">
+              <span className="absolute right-4 top-4 font-mono text-[11px] text-muted-foreground/40">
+                03
+              </span>
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
+                  <Activity
+                    size={15}
+                    className="text-teal-600 dark:text-teal-400"
+                  />
+                </div>
+                <p className="text-sm font-semibold">Sinyal Engagement</p>
+              </div>
+              <p className="text-[14px] leading-relaxed text-foreground/75">
                 {analysis.analysisReport.sinyalEngagement}
               </p>
             </div>
 
-            <div className="pt-4">
-              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                Peluang yang Belum Dioptimalkan
-              </p>
-              <p className="text-[15px] leading-relaxed text-foreground/80">
+            {/* 04 Peluang Belum Dioptimalkan */}
+            <div className="relative rounded-2xl border border-teal-500/20 bg-teal-500/[0.04] p-5">
+              <span className="absolute right-4 top-4 font-mono text-[11px] text-teal-500/30">
+                04
+              </span>
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/15">
+                  <Lightbulb
+                    size={15}
+                    className="text-teal-600 dark:text-teal-400"
+                  />
+                </div>
+                <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
+                  Peluang Belum Dioptimalkan
+                </p>
+              </div>
+              <p className="text-[14px] leading-relaxed text-foreground/75">
                 {analysis.analysisReport.peluangBelumDioptimalkan}
               </p>
             </div>
@@ -228,7 +298,15 @@ export default async function AnalysisPage() {
         </div>
       )}
 
-      {/* Row 2: Nuance + Audience Profile */}
+      {/* ── Section divider ─────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 pt-1">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground/50">
+          // DETAIL ANALYSIS
+        </p>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* ── Nuance + Audience Profile ────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
         {/* Nuance */}
         <div className="rounded-2xl border border-border bg-card p-6">
@@ -253,7 +331,7 @@ export default async function AnalysisPage() {
 
         {/* Audience Profile */}
         <div className="rounded-2xl border border-border bg-card p-6">
-          <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <Users size={17} className="text-teal-600 dark:text-teal-400" />
               <div>
@@ -269,6 +347,14 @@ export default async function AnalysisPage() {
               AI-Estimated
             </span>
           </div>
+
+          {/* AI prose description */}
+          {analysis.analysisReport?.profilAudience && (
+            <p className="mb-4 text-[13px] leading-relaxed text-foreground/65 border-b border-border pb-4">
+              {analysis.analysisReport.profilAudience}
+            </p>
+          )}
+
           <div className="flex flex-col gap-3">
             <div className="rounded-xl border border-border bg-muted/40 px-4 py-3.5">
               <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
@@ -290,7 +376,7 @@ export default async function AnalysisPage() {
         </div>
       </div>
 
-      {/* Best Posting Days */}
+      {/* ── Best Posting Days ───────────────────────────────────────────── */}
       {postingDays.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-5 flex items-center gap-2.5">
@@ -325,6 +411,9 @@ export default async function AnalysisPage() {
                   >
                     {d.day}
                   </p>
+                  <p className="font-mono text-[10px] text-muted-foreground mb-1">
+                    avg views
+                  </p>
                   <p className="font-mono text-sm font-semibold leading-tight tracking-tight">
                     {fmtViews(d.avgViews)}
                   </p>
@@ -337,18 +426,6 @@ export default async function AnalysisPage() {
           </div>
         </div>
       )}
-
-      {/* Footer CTA */}
-      <div className="flex justify-end pt-1">
-        <Link
-          href="/recommendations"
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-teal-500 px-4 text-sm font-semibold text-white hover:bg-teal-400 transition-colors"
-        >
-          <ShoppingBag size={15} />
-          Lihat rekomendasi produk
-          <ArrowRight size={15} />
-        </Link>
-      </div>
     </div>
   );
 }
