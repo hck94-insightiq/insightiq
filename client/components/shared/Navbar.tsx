@@ -15,14 +15,14 @@ import {
 import { useEffect, useState } from "react";
 
 const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
-  "/dashboard": { label: "Dashboard", sublabel: "OVERVIEW" },
+  "/dashboard": { label: "Overview", sublabel: "DASHBOARD" },
   "/dashboard/analysis": {
-    label: "Niche & Audience Detection",
+    label: "Analysis reports and insights",
     sublabel: "AI ANALYSIS",
   },
   "/recommendations": {
-    label: "Top kategori produk untuk akun kamu",
-    sublabel: "PRODUCT RECOMMENDATIONS",
+    label: "Top products based on your niche",
+    sublabel: "RECOMMENDATIONS",
   },
   "/dashboard/chat": {
     label: "Chat with your AI consultant",
@@ -31,6 +31,7 @@ const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
   "/settings": { label: "Settings & Account", sublabel: "SETTINGS" },
   "/admin": { label: "Admin Panel", sublabel: "ADMIN" },
   "/admin/users": { label: "Admin Panel", sublabel: "ADMIN" },
+  "/wishlist": { label: "Saved products", sublabel: "WISHLIST" },
 };
 
 function getPageTitle(pathname: string) {
@@ -42,6 +43,7 @@ function getPageTitle(pathname: string) {
     return PAGE_TITLES["/dashboard/chat"];
   if (pathname.startsWith("/settings")) return PAGE_TITLES["/settings"];
   if (pathname.startsWith("/admin")) return PAGE_TITLES["/admin"];
+  if (pathname.startsWith("/wishlist")) return PAGE_TITLES["/wishlist"];
   if (pathname === "/dashboard") return PAGE_TITLES["/dashboard"];
   return { label: "InsightIQ", sublabel: "" };
 }

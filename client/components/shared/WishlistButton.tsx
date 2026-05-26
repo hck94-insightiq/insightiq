@@ -53,14 +53,14 @@ export function WishlistButton({ product }: Props) {
         toggleWishlist();
       }}
       disabled={loading}
-      className="p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+      className="rounded-full bg-card/80 p-1.5 shadow-sm backdrop-blur-sm transition-colors hover:bg-card"
     >
       <Heart
         size={14}
         className={
           wished
             ? "fill-rose-500 text-rose-500"
-            : "text-gray-400 hover:text-rose-400"
+            : "text-muted-foreground hover:text-rose-400"
         }
       />
     </button>
