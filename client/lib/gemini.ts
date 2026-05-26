@@ -53,9 +53,14 @@ export const analysisSchema = z.object({
           .describe("1-2 kalimat alasan spesifik kenapa kategori ini cocok"),
         examples: z
           .array(z.string())
-          .min(2)
-          .max(4)
-          .describe("2-4 contoh produk spesifik dalam kategori"),
+          .length(3)
+          .describe(
+            "Tepat 3 keyword pencarian Tokopedia yang pendek dan natural (maks 4 kata per keyword), " +
+              "seperti yang diketik orang saat belanja online. " +
+              "Contoh bagus: 'sarung jempol gaming', 'kopi susu kemasan', 'earphone gaming murah'. " +
+              "Contoh buruk: 'Sarung Jempol / Finger Sleeve Gaming untuk Mobile Legends', " +
+              "'Gantungan Kunci Akrilik Karakter HoK'."
+          ),
       }),
     )
     .min(4)

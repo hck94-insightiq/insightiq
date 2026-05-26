@@ -21,6 +21,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { query } = await req.json();
+  const rawQuery = query.trim();
+  const words = rawQuery.split(/\s+/);
+  const simplifiedQuery = words.length > 4 ? words.slice(0, 4).join(" ") : rawQuery;
   console.log("Received query:", query);
   if (!query || typeof query !== "string" || !query.trim()) {
     return NextResponse.json(
@@ -37,8 +40,8 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          keyword: query.trim(),
-          results_wanted: 3,
+          keyword: simplifiedQuery,
+          results_wanted: 2,
           max_pages: 1,
           proxyConfiguration: { useApifyProxy: false },
         }),
