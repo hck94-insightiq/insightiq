@@ -8,6 +8,7 @@ import {
   Music,
   Sparkles,
   TrendingUp,
+  ThumbsUp,
 } from "lucide-react";
 import { Account, Analysis } from "@/types";
 
@@ -46,7 +47,7 @@ export default function KpiCards({ account, analysis }: Props) {
     {
       label: "Engagement Rate",
       value: `${engagementRate}%`,
-      delta: "+0.6%",
+      delta: "likes + comments + shares",
       icon: Activity,
       tone: "up" as const,
       accent: true,
@@ -54,7 +55,7 @@ export default function KpiCards({ account, analysis }: Props) {
     {
       label: "Total Videos",
       value: String(account.totalVideos),
-      delta: `${account.totalVideos} total`,
+      delta: `${account.totalVideos} video`,
       icon: Music,
       tone: "up" as const,
     },
@@ -63,6 +64,13 @@ export default function KpiCards({ account, analysis }: Props) {
       value: formatNum(account.avgViews),
       delta: account.avgViews.toLocaleString("id-ID"),
       icon: Eye,
+      tone: "up" as const,
+    },
+    {
+      label: "Avg Likes",
+      value: formatNum(account.avgLikes),
+      delta: account.avgLikes.toLocaleString("id-ID"),
+      icon: ThumbsUp,
       tone: "up" as const,
     },
     {
@@ -84,7 +92,7 @@ export default function KpiCards({ account, analysis }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
       {kpis.map(({ label, value, delta, icon: Icon, tone, accent }) => {
         if (accent) {
           return (
