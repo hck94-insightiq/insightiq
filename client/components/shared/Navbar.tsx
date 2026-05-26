@@ -2,10 +2,9 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Moon, Sun, Settings, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,33 +13,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/dashboard/analysis": "AI Analysis",
-  "/recommendations": "Recommendations",
-  "/dashboard/chat": "AI Consultant",
-  "/settings": "Settings & Account",
-  "/admin": "Admin Panel",
-  "/admin/users": "Admin Panel",
+const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
+  "/dashboard": { label: "Dashboard", sublabel: "OVERVIEW" },
+  "/dashboard/analysis": {
+    label: "Niche & Audience Detection",
+    sublabel: "AI ANALYSIS",
+  },
+  "/recommendations": {
+    label: "Top kategori produk untuk akun kamu",
+    sublabel: "PRODUCT RECOMMENDATIONS",
+  },
+  "/dashboard/chat": {
+    label: "Chat with your AI consultant",
+    sublabel: "AI CONSULTANT",
+  },
+  "/settings": { label: "Settings & Account", sublabel: "SETTINGS" },
+  "/admin": { label: "Admin Panel", sublabel: "ADMIN" },
+  "/admin/users": { label: "Admin Panel", sublabel: "ADMIN" },
 };
 
-function getPageTitle(pathname: string): { label: string; sublabel?: string } {
+function getPageTitle(pathname: string) {
   if (pathname.startsWith("/dashboard/analysis"))
-    return { label: "Niche & Audience Detection", sublabel: "AI ANALYSIS" };
+    return PAGE_TITLES["/dashboard/analysis"];
   if (pathname.startsWith("/recommendations"))
-    return {
-      label: "Top kategori produk untuk akun kamu",
-      sublabel: "PRODUCT RECOMMENDATIONS",
-    };
+    return PAGE_TITLES["/recommendations"];
   if (pathname.startsWith("/dashboard/chat"))
-    return { label: "Chat with your AI consultant", sublabel: "AI CONSULTANT" };
-  if (pathname.startsWith("/settings"))
-    return { label: "Settings & Account", sublabel: "SETTINGS" };
-  if (pathname.startsWith("/admin"))
-    return { label: "Admin Panel", sublabel: "ADMIN" };
-  if (pathname === "/dashboard")
-    return { label: "Dashboard", sublabel: "OVERVIEW" };
-  return { label: "InsightIQ" };
+    return PAGE_TITLES["/dashboard/chat"];
+  if (pathname.startsWith("/settings")) return PAGE_TITLES["/settings"];
+  if (pathname.startsWith("/admin")) return PAGE_TITLES["/admin"];
+  if (pathname === "/dashboard") return PAGE_TITLES["/dashboard"];
+  return { label: "InsightIQ", sublabel: "" };
 }
 
 export default function Navbar() {
@@ -59,25 +61,26 @@ export default function Navbar() {
     : "U";
 
   return (
-    <header className="h-14 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-6 fixed top-0 left-56 right-0 z-10">
+    <header className="fixed left-56 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-8 backdrop-blur">
       {/* Page title */}
-      <div>
+      <div className="flex flex-col gap-0.5">
         {sublabel && (
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase">
+          <span className="font-mono text-[11px] tracking-[0.06em] text-muted-foreground">
             // {sublabel}
-          </p>
+          </span>
         )}
-        <h2 className="text-base font-bold text-gray-900 dark:text-white leading-tight">
+        <h2 className="text-[15px] font-semibold leading-tight tracking-tight">
           {label}
         </h2>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {/* Theme toggle */}
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+          aria-label="Toggle theme"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
         </button>
@@ -86,24 +89,22 @@ export default function Navbar() {
         {session && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-teal-500 text-white text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm text-gray-700 dark:text-white/80 font-medium leading-tight">
-                    {session.user?.name}
-                  </span>
-                  <span className="text-xs text-gray-400 dark:text-white/30 leading-tight">
-                    {session.user?.email}
-                  </span>
-                </div>
-                <ChevronDown size={14} className="text-gray-400" />
+              <button className="ml-1 inline-flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-muted transition-colors">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-teal-700 text-xs font-semibold text-white">
+                  {initials}
+                </span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-semibold leading-tight">
+                  {session.user?.name}
+                </p>
+                <p className="truncate font-mono text-[11px] leading-tight text-muted-foreground">
+                  {session.user?.email}
+                </p>
+              </div>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link
                   href="/settings"

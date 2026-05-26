@@ -1,12 +1,25 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Heart, Sparkles, Target, Video } from "lucide-react";
+import {
+  Activity,
+  Eye,
+  Brain,
+  Target,
+  Music,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { Account, Analysis } from "@/types";
 
 interface Props {
   account: Account;
   analysis: Analysis | null;
+}
+
+function formatNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
 export default function KpiCards({ account, analysis }: Props) {
@@ -25,7 +38,7 @@ export default function KpiCards({ account, analysis }: Props) {
           analysis.recommendations
             .slice(0, 3)
             .reduce((sum, r) => sum + r.matchScore, 0) /
-            Math.min(3, analysis.recommendations.length)
+            Math.min(3, analysis.recommendations.length),
         )
       : null;
 
@@ -33,50 +46,96 @@ export default function KpiCards({ account, analysis }: Props) {
     {
       label: "Engagement Rate",
       value: `${engagementRate}%`,
-      icon: Heart,
-      color: "text-pink-500",
+      delta: "+0.6%",
+      icon: Activity,
+      tone: "up" as const,
+      accent: true,
     },
     {
       label: "Total Videos",
-      value: account.totalVideos.toLocaleString("id-ID"),
-      icon: Video,
-      color: "text-blue-500",
+      value: String(account.totalVideos),
+      delta: `${account.totalVideos} total`,
+      icon: Music,
+      tone: "up" as const,
     },
     {
       label: "Avg Views",
-      value: account.avgViews.toLocaleString("id-ID"),
+      value: formatNum(account.avgViews),
+      delta: account.avgViews.toLocaleString("id-ID"),
       icon: Eye,
-      color: "text-purple-500",
+      tone: "up" as const,
     },
     {
       label: "Niche Confidence",
       value: analysis ? `${analysis.confidenceScore}%` : "—",
-      icon: Sparkles,
-      color: "text-amber-500",
+      delta: "AI",
+      icon: Brain,
+      tone: "ai" as const,
     },
     {
       label: "Affiliate Match",
-      value: avgMatch ? `${avgMatch}%` : "—",
+      value: avgMatch ? `${avgMatch}` : "—",
+      delta: avgMatch
+        ? `top ${analysis?.recommendations?.length ?? 0} categories`
+        : "—",
       icon: Target,
-      color: "text-emerald-500",
+      tone: "up" as const,
     },
-  ];    
+  ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {kpis.map(({ label, value, icon: Icon, color }) => (
-        <Card key={label}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {label}
-            </CardTitle>
-            <Icon className={`h-4 w-4 ${color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{value}</div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+      {kpis.map(({ label, value, delta, icon: Icon, tone, accent }) => {
+        if (accent) {
+          return (
+            <div
+              key={label}
+              className="relative overflow-hidden rounded-xl bg-foreground p-5 text-background"
+            >
+              <div className="flex items-start justify-between">
+                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-background/55">
+                  {label}
+                </span>
+                <Icon size={14} className="text-teal-400" />
+              </div>
+              <p className="mt-2 font-mono text-[26px] font-semibold leading-none tracking-tight">
+                {value}
+              </p>
+              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-teal-400">
+                <TrendingUp size={12} /> {delta}
+              </p>
+            </div>
+          );
+        }
+
+        const deltaColor =
+          tone === "ai"
+            ? "text-teal-600 dark:text-teal-400"
+            : "text-emerald-600 dark:text-emerald-400";
+        const DeltaIcon = tone === "ai" ? Sparkles : TrendingUp;
+
+        return (
+          <div
+            key={label}
+            className="relative overflow-hidden rounded-xl border border-border bg-card p-5"
+          >
+            <div className="flex items-start justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                {label}
+              </span>
+              <Icon size={14} className="text-muted-foreground" />
+            </div>
+            <p className="mt-2 font-mono text-[26px] font-semibold leading-none tracking-tight">
+              {value}
+            </p>
+            <p
+              className={`mt-2 inline-flex items-center gap-1 text-[11px] font-medium ${deltaColor}`}
+            >
+              <DeltaIcon size={12} /> {delta}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
