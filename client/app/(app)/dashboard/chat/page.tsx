@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Send, Loader2, Bot, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,12 +26,28 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function ChatPage() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Pre-fill prompt from query string (e.g. coming from wishlist)
+  useEffect(() => {
+    const promptFromQuery = searchParams.get("prompt");
+    if (promptFromQuery) {
+      setInput(decodeURIComponent(promptFromQuery));
+      // Focus textarea so user just needs to press Enter
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        // Move cursor to end
+        const len = decodeURIComponent(promptFromQuery).length;
+        textareaRef.current?.setSelectionRange(len, len);
+      }, 100);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetch("/api/account")
