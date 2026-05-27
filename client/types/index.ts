@@ -1,0 +1,138 @@
+﻿import { DefaultSession } from "next-auth";
+
+// Auth & User
+
+export type Role = "user" | "admin";
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+  createdAt: Date;
+  telegramChatId?: string;
+  telegramConnected?: boolean;
+  telegramVerifyCode?: string;
+  telegramVerifyExpiry?: Date;
+  notificationEnabled?: boolean;
+  notificationHour?: number;
+  lastNotificationSentAt?: Date;
+}
+
+// Account (data TikTok dari Apify)
+
+export interface PostingDay {
+  day: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+  avgViews: number;
+  count: number;
+}
+
+export interface EngagementBreakdown {
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+}
+
+export interface Account {
+  _id: string;
+  userId: string;
+  tiktokUsername: string;
+  avatarUrl: string | null;
+  nickName: string;
+  contentDescription: string;
+  followers: number;
+  following: number;
+  totalVideos: number;
+  avgViews: number;
+  avgLikes: number;
+  avgComments: number;
+  avgShares: number;
+  avgSaves: number;
+  hashtags: string[];
+  postingDays: PostingDay[];
+  engagementBreakdown: EngagementBreakdown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// AI Analysis (Gemini)
+
+export interface AudienceProfile {
+  ageRange: string;
+  purchasePower: string;
+}
+
+export interface Recommendation {
+  category: string;
+  priceRange: string;
+  matchScore: number;
+  reason: string;
+  examples: string[];
+}
+
+export interface Analysis {
+  _id: string;
+  userId: string;
+  accountId: string;
+  primaryNiche: string;
+  secondaryNiche: string;
+  nuanceDescription: string;
+  confidenceScore: number;
+  audienceProfile: AudienceProfile;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
+  recommendations: Recommendation[];
+  createdAt: Date;
+  analysisReport?: {
+    polaKonten: string;
+    profilAudience: string;
+    sinyalEngagement: string;
+    peluangBelumDioptimalkan: string;
+  };
+}
+
+export interface AnalysisOutput {
+  primaryNiche: string;
+  secondaryNiche: string;
+  nuanceDescription: string;
+  confidenceScore: number;
+  audienceProfile: AudienceProfile;
+  nicheBreakdown: Array<{ niche: string; score: number }>;
+  recommendations: Recommendation[];
+}
+
+export interface WishlistItem {
+  _id: string;
+  userId: string;
+  productId: string;
+  title: string;
+  price: string;
+  priceNumber: number;
+  imageUrl: string;
+  productUrl: string;
+  shopName: string;
+  shopUrl: string;
+  createdAt: Date;
+}
+
+// NextAuth module augmentation
+
+declare module "next-auth" {
+  interface User {
+    role: Role;
+  }
+  interface Session {
+    user: {
+      id: string;
+      role: Role;
+    } & DefaultSession["user"];
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: Role;
+  }
+}
