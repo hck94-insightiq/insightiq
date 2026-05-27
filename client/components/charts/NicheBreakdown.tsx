@@ -70,7 +70,7 @@ export default function NicheBreakdown({ data }: Props) {
                 dataKey="niche"
                 tickLine={false}
                 axisLine={false}
-                width={130}
+                width={95}
                 tick={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono, monospace)",

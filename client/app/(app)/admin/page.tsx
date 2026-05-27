@@ -174,7 +174,7 @@ export default async function AdminPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -300,51 +300,57 @@ export default async function AdminPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-muted-foreground uppercase border-b border-border">
-                <th className="text-left pb-2 font-medium">Event</th>
-                <th className="text-left pb-2 font-medium">User</th>
-                <th className="text-left pb-2 font-medium">Detail</th>
-                <th className="text-right pb-2 font-medium">Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {stats.recentActivity.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="py-8 text-center text-muted-foreground"
-                  >
-                    Belum ada aktivitas.
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
+              <thead>
+                <tr className="text-xs text-muted-foreground uppercase border-b border-border">
+                  <th className="text-left pb-2 font-medium">Event</th>
+                  <th className="text-left pb-2 font-medium">User</th>
+                  <th className="text-left pb-2 font-medium">Detail</th>
+                  <th className="text-right pb-2 font-medium hidden sm:table-cell">
+                    Time
+                  </th>
                 </tr>
-              ) : (
-                stats.recentActivity.map((a, i) => (
-                  <tr key={i} className="hover:bg-muted/50 transition-colors">
-                    <td className="py-3">
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-mono"
-                      >
-                        NEW_ANALYSIS
-                      </Badge>
-                    </td>
-                    <td className="py-3 font-medium text-foreground">
-                      {a.user?.[0]?.name ?? "Unknown"}
-                    </td>
-                    <td className="py-3 text-muted-foreground">
-                      Niche detected: {a.primaryNiche ?? "-"}
-                      {a.confidenceScore ? ` (${a.confidenceScore}% conf)` : ""}
-                    </td>
-                    <td className="py-3 text-right text-muted-foreground">
-                      {a.createdAt ? timeAgo(a.createdAt) : "-"}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {stats.recentActivity.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="py-8 text-center text-muted-foreground"
+                    >
+                      Belum ada aktivitas.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  stats.recentActivity.map((a, i) => (
+                    <tr key={i} className="hover:bg-muted/50 transition-colors">
+                      <td className="py-3">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-mono whitespace-nowrap"
+                        >
+                          NEW_ANALYSIS
+                        </Badge>
+                      </td>
+                      <td className="py-3 font-medium text-foreground whitespace-nowrap pr-3">
+                        {a.user?.[0]?.name ?? "Unknown"}
+                      </td>
+                      <td className="py-3 text-muted-foreground max-w-[220px] truncate">
+                        Niche detected: {a.primaryNiche ?? "-"}
+                        {a.confidenceScore
+                          ? ` (${a.confidenceScore}% conf)`
+                          : ""}
+                      </td>
+                      <td className="py-3 text-right text-muted-foreground whitespace-nowrap hidden sm:table-cell">
+                        {a.createdAt ? timeAgo(a.createdAt) : "-"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>
