@@ -25,7 +25,7 @@ export async function POST() {
 
   await sendMessage(
     user.telegramChatId,
-    `✅ *Halo, ${user.name}!*\n\nKoneksi Telegram InsightIQ kamu berjalan dengan baik.\n\nKamu akan menerima rekomendasi produk harian sesuai jadwal yang kamu pilih. Semangat! 🚀`
+    `✅ <b>Halo, ${user.name}!</b>\n\nKoneksi Telegram InsightIQ kamu berjalan dengan baik.\n\nKamu akan menerima rekomendasi produk harian sesuai jadwal yang kamu pilih. Semangat! 🚀`
   );
 
   return NextResponse.json({ success: true });

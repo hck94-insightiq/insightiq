@@ -3,6 +3,14 @@ import type { Analysis, Account } from "@/types";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+// Escape karakter HTML agar tidak merusak parse_mode HTML Telegram
+function esc(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export async function sendMessage(chatId: string, text: string): Promise<void> {
   const res = await fetch(
     `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
@@ -12,7 +20,7 @@ export async function sendMessage(chatId: string, text: string): Promise<void> {
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
       }),
     }
   );
@@ -34,9 +42,9 @@ export function formatDailyMessage(
   const produkLines = top3
     .map((rec, i) => {
       return (
-        `${rankEmoji[i]} *${rec.category}* — Match: ${rec.matchScore}%\n` +
-        `💰 ${rec.priceRange}\n` +
-        `_${rec.reason}_`
+        `${rankEmoji[i]} <b>${esc(rec.category)}</b> — Match: ${rec.matchScore}%\n` +
+        `💰 ${esc(rec.priceRange)}\n` +
+        `<i>${esc(rec.reason)}</i>`
       );
     })
     .join("\n\n");
@@ -50,14 +58,19 @@ export function formatDailyMessage(
     timeZone: "Asia/Jakarta",
   });
 
+  const linkUrl = `${APP_URL}/recommendations`;
+  const isLocalhost = APP_URL.includes("localhost");
+
   return (
-    `🌅 *Selamat pagi, ${userName}!*\n` +
+    `🌅 <b>Selamat pagi, ${esc(userName)}!</b>\n` +
     `📅 ${tanggal}\n\n` +
-    `📊 *Rekomendasi Produk Hari Ini*\n` +
-    `Niche kamu: _${analysis.primaryNiche}_\n\n` +
-    `🔥 *Top 3 Produk untuk Kamu:*\n\n` +
+    `📊 <b>Rekomendasi Produk Hari Ini</b>\n` +
+    `Niche kamu: <i>${esc(analysis.primaryNiche)}</i>\n\n` +
+    `🔥 <b>Top 3 Produk untuk Kamu:</b>\n\n` +
     `${produkLines}\n\n` +
-    `📱 Lihat analisis lengkap → ${APP_URL}/recommendations\n\n` +
+    (isLocalhost
+      ? `📱 Lihat analisis lengkap → ${linkUrl}\n\n`
+      : `📱 <a href="${linkUrl}">Lihat analisis lengkap →</a>\n\n`) +
     `Semangat jualan hari ini! 💪`
   );
 }

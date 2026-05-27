@@ -65,8 +65,8 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
 bot.onText(/\/start$/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "👋 Halo! Saya bot InsightIQ.\n\nUntuk menghubungkan akun, pergi ke Settings InsightIQ dan klik *Hubungkan Telegram*, lalu kirim kode yang diberikan ke sini.",
-    { parse_mode: "Markdown" }
+    "👋 Halo! Saya bot InsightIQ.\n\nUntuk menghubungkan akun, pergi ke Settings InsightIQ dan klik <b>Hubungkan Telegram</b>, lalu kirim kode yang diberikan ke sini.",
+    { parse_mode: "HTML" }
   );
 });
 
