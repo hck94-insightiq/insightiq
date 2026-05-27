@@ -22,7 +22,7 @@ export async function sendMessage(chatId: string, text: string): Promise<void> {
         text,
         parse_mode: "HTML",
       }),
-    }
+    },
   );
   if (!res.ok) {
     const err = await res.json();
@@ -33,7 +33,7 @@ export async function sendMessage(chatId: string, text: string): Promise<void> {
 export function formatDailyMessage(
   userName: string,
   analysis: Analysis,
-  _account: Account
+  _account: Account,
 ): string {
   const top3 = analysis.recommendations.slice(0, 3);
 
@@ -58,11 +58,22 @@ export function formatDailyMessage(
     timeZone: "Asia/Jakarta",
   });
 
+  // Greeting berdasarkan jam WIB
+  const jamWIB = new Date(now.getTime() + 7 * 60 * 60 * 1000).getUTCHours();
+  const greeting =
+    jamWIB >= 5 && jamWIB < 12
+      ? "🌅 Selamat pagi"
+      : jamWIB >= 12 && jamWIB < 15
+        ? "☀️ Selamat siang"
+        : jamWIB >= 15 && jamWIB < 19
+          ? "🌤️ Selamat sore"
+          : "🌙 Selamat malam";
+
   const linkUrl = `${APP_URL}/recommendations`;
   const isLocalhost = APP_URL.includes("localhost");
 
   return (
-    `🌅 <b>Selamat pagi, ${esc(userName)}!</b>\n` +
+    `${greeting}, <b>${esc(userName)}!</b>\n` +
     `📅 ${tanggal}\n\n` +
     `📊 <b>Rekomendasi Produk Hari Ini</b>\n` +
     `Niche kamu: <i>${esc(analysis.primaryNiche)}</i>\n\n` +

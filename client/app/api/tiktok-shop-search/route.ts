@@ -7,8 +7,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const maxDuration = 60;
 
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
-const APIFY_ACTOR = "shahidirfan~tokopedia-search-scraper";
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 jam
+const APIFY_ACTOR = "pratikdani~tiktok-shop-search-scraper";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const cacheKey = category ?? query.trim();
 
   // Cek cache MongoDB
-  const cached = await db.collection("tokopedia_cache").findOne({
+  const cached = await db.collection("tiktokshop_cache").findOne({
     userId,
     category: cacheKey,
     fetchedAt: { $gt: new Date(Date.now() - CACHE_TTL_MS) },
@@ -60,14 +60,14 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          country_code: "ID",
           keyword: simplifiedQuery,
-          results_wanted: 9,
-          max_pages: 1,
-          proxyConfiguration: { useApifyProxy: false },
+          limit: 9,
         }),
       },
     );
-  } catch {
+  } catch (err: any) {
+    console.error("Apify fetch failed:", err.message);
     return NextResponse.json(
       { error: "Gagal menghubungi Apify." },
       { status: 502 },
@@ -75,6 +75,8 @@ export async function POST(req: NextRequest) {
   }
 
   if (!apifyRes.ok) {
+    const errText = await apifyRes.text();
+    console.error("Apify error:", apifyRes.status, errText);
     return NextResponse.json(
       { error: "Apify gagal menjalankan scraper." },
       { status: 502 },
@@ -91,20 +93,24 @@ export async function POST(req: NextRequest) {
   }
 
   const products = raw.map((item: any) => ({
-    name: item.title,
-    price: item.price,
-    rating: item.rating,
-    url: item.product_url,
-    image: item.image_url,
-    productId: item.product_id,
-    shopName: item.shop_name,
-    shopUrl: item.shop_url,
-    priceNumber: item.price_number,
+    name: item.product_title ?? item.product_name ?? "",
+    price: item.avg_price ?? null,
+    priceNumber: item.original_price ? parseInt(item.original_price, 10) : null,
+    rating: item.product_rating ? parseFloat(item.product_rating) : null,
+    url: item.product_id
+      ? `https://shop.tiktok.com/view/product/${item.product_id}`
+      : null,
+    image: item.cover_url ?? null,
+    productId: item.product_id ?? null,
+    shopName: item.seller?.seller_name ?? null,
+    shopUrl: null,
+    commission: item.commission || null,
+    influencersCount: item.influencers_count || item.total_ifl_cnt || null,
   }));
 
   // Simpan ke cache (upsert)
   await db
-    .collection("tokopedia_cache")
+    .collection("tiktokshop_cache")
     .updateOne(
       { userId, category: cacheKey },
       { $set: { userId, category: cacheKey, products, fetchedAt: new Date() } },

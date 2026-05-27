@@ -6,9 +6,10 @@ import {
   ShoppingBag,
   Search,
   Loader2,
-  ExternalLink,
   Sparkles,
   Star,
+  Users,
+  AlertCircle,
 } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import { WishlistButton } from "@/components/shared/WishlistButton";
@@ -21,7 +22,7 @@ interface Recommendation {
   examples: string[];
 }
 
-interface TokopediaProduct {
+interface ShopProduct {
   name: string;
   price: string | null;
   priceNumber: number | null;
@@ -31,16 +32,18 @@ interface TokopediaProduct {
   productId: string | null;
   shopName: string | null;
   shopUrl: string | null;
+  commission: string | null;
+  influencersCount: string | null;
 }
 
-// ─── Tokopedia product card ───────────────────────────────────────────────────
+// ─── Product card ─────────────────────────────────────────────────────────────
 
 function ProductCard({
   p,
   wishlistedIds,
   onWishlistChange,
 }: {
-  p: TokopediaProduct;
+  p: ShopProduct;
   wishlistedIds: Set<string>;
   onWishlistChange: (id: string, added: boolean) => void;
 }) {
@@ -65,18 +68,21 @@ function ProductCard({
               shopName: p.shopName ?? "",
               shopUrl: p.shopUrl ?? "",
             }}
-            initialWished={wishlistedIds.has(p.productId)}
-            onToggle={(isWished) => onWishlistChange(p.productId!, isWished)}
+            initialWished={p.productId ? wishlistedIds.has(p.productId) : false}
+            onToggle={(isWished) =>
+              p.productId && onWishlistChange(p.productId, isWished)
+            }
           />
         </div>
       )}
 
-      {/* Image area */}
+      {/* Image */}
       <div className="relative aspect-square w-full overflow-hidden bg-muted/60">
         {p.image ? (
           <img
             src={p.image}
             alt={p.name}
+            loading="lazy"
             className="h-full w-full object-contain"
           />
         ) : (
@@ -91,20 +97,44 @@ function ProductCard({
         <p className="line-clamp-2 text-[11px] font-medium leading-tight">
           {p.name}
         </p>
-        <p className="mt-auto pt-1.5 font-mono text-[12px] font-semibold">
+
+        <p className="mt-auto pt-1 font-mono text-[12px] font-semibold">
           {p.price ?? "—"}
         </p>
-        <div className="flex items-center justify-between">
-          {p.rating && (
-            <span className="flex items-center gap-0.5 text-[11px] text-amber-500">
-              <Star size={10} className="fill-current" /> {p.rating}
-            </span>
-          )}
-          <ExternalLink
-            size={12}
-            className="ml-auto text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-          />
-        </div>
+
+        {/* Rating */}
+        {p.rating && (
+          <span className="flex items-center gap-0.5 text-[11px] text-amber-500">
+            <Star size={10} className="fill-current" /> {p.rating}
+          </span>
+        )}
+
+        {/* Commission + influencers badges */}
+        {(p.commission || p.influencersCount) && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {p.commission && (
+              <span className="relative group/commission inline-flex items-center rounded-md bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal-700 dark:text-teal-400 cursor-default">
+                {p.commission} komisi
+                <span className="pointer-events-none absolute bottom-full left-0 mb-1.5 w-max max-w-[160px] rounded-md bg-popover border border-border px-2 py-1 text-[10px] text-popover-foreground shadow-md opacity-0 group-hover/commission:opacity-100 transition-opacity text-center leading-snug z-50">
+                  Seller membuka program afiliasi dengan komisi {p.commission}
+                </span>
+              </span>
+            )}
+            {p.influencersCount && p.influencersCount !== "0" && (
+              <span
+                className={`relative group/influencer inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground cursor-default`}
+              >
+                <Users size={9} />
+                {p.influencersCount}
+                <span
+                  className={`pointer-events-none absolute bottom-full ${p.commission ? "left-1/2 -translate-x-1/2" : "left-0"} mb-1.5 w-max max-w-[160px] rounded-md bg-popover border border-border px-2 py-1 text-[10px] text-popover-foreground shadow-md opacity-0 group-hover/influencer:opacity-100 transition-opacity text-center leading-snug z-50`}
+                >
+                  {p.influencersCount} influencer telah mengiklankan produk ini
+                </span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </a>
   );
@@ -123,49 +153,50 @@ function RecommendationCard({
   wishlistedIds: Set<string>;
   onWishlistChange: (id: string, added: boolean) => void;
 }) {
-  const [products, setProducts] = useState<TokopediaProduct[]>([]);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
   const [searchState, setSearchState] = useState<"idle" | "loading" | "done">(
     "idle",
   );
   const isTop = index === 0;
 
+  async function fetchProducts() {
+    const keywords =
+      rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
+
+    const results = await Promise.all(
+      keywords.map((kw) =>
+        fetch("/api/tiktok-shop-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: kw, category: rec.category }),
+        })
+          .then((r) => r.json())
+          .then((d) => (d.products ?? []) as ShopProduct[])
+          .catch(() => [] as ShopProduct[]),
+      ),
+    );
+
+    const seen = new Set<string>();
+    const merged: ShopProduct[] = [];
+    for (const batch of results) {
+      for (const p of batch) {
+        const key = p.productId ?? p.url ?? p.name;
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(p);
+        }
+      }
+    }
+
+    return merged
+      .filter((p) => !p.productId || !wishlistedIds.has(p.productId))
+      .slice(0, 6);
+  }
+
   async function handleSearch() {
     setSearchState("loading");
     try {
-      const keywords =
-        rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
-
-      const results = await Promise.all(
-        keywords.map((kw) =>
-          fetch("/api/tokopedia-search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: kw, category: rec.category }),
-          })
-            .then((r) => r.json())
-            .then((d) => (d.products ?? []) as TokopediaProduct[])
-            .catch(() => [] as TokopediaProduct[]),
-        ),
-      );
-
-      const seen = new Set<string>();
-      const merged: TokopediaProduct[] = [];
-      for (const batch of results) {
-        for (const p of batch) {
-          const key = p.productId ?? p.url ?? p.name;
-          if (!seen.has(key)) {
-            seen.add(key);
-            merged.push(p);
-          }
-        }
-      }
-
-      // Filter produk yang sudah di-wishlist
-      const filtered = merged
-        .filter((p) => !p.productId || !wishlistedIds.has(p.productId))
-        .slice(0, 6);
-
-      setProducts(filtered);
+      setProducts(await fetchProducts());
       setSearchState("done");
     } catch {
       setProducts([]);
@@ -176,40 +207,7 @@ function RecommendationCard({
   async function handleSearchAgain() {
     setSearchState("loading");
     try {
-      const keywords =
-        rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
-
-      const results = await Promise.all(
-        keywords.map((kw) =>
-          fetch("/api/tokopedia-search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: kw, category: rec.category }),
-          })
-            .then((r) => r.json())
-            .then((d) => (d.products ?? []) as TokopediaProduct[])
-            .catch(() => [] as TokopediaProduct[]),
-        ),
-      );
-
-      const seen = new Set<string>();
-      const merged: TokopediaProduct[] = [];
-      for (const batch of results) {
-        for (const p of batch) {
-          const key = p.productId ?? p.url ?? p.name;
-          if (!seen.has(key)) {
-            seen.add(key);
-            merged.push(p);
-          }
-        }
-      }
-
-      // Re-filter dengan wishlistedIds terbaru
-      const filtered = merged
-        .filter((p) => !p.productId || !wishlistedIds.has(p.productId))
-        .slice(0, 6);
-
-      setProducts(filtered);
+      setProducts(await fetchProducts());
       setSearchState("done");
     } catch {
       setSearchState("done");
@@ -222,7 +220,6 @@ function RecommendationCard({
         isTop ? "border-teal-500/40" : "border-border"
       }`}
     >
-      {/* Top match badge */}
       {isTop && (
         <div className="mb-3 flex">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-400">
@@ -231,7 +228,6 @@ function RecommendationCard({
         </div>
       )}
 
-      {/* 3-column grid */}
       <div
         className="grid items-start gap-5"
         style={{ gridTemplateColumns: "52px 1fr 200px" }}
@@ -292,7 +288,6 @@ function RecommendationCard({
             </p>
           </div>
 
-          {/* Progress bar */}
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-teal-500"
@@ -300,7 +295,6 @@ function RecommendationCard({
             />
           </div>
 
-          {/* Search button */}
           <button
             onClick={searchState === "done" ? handleSearchAgain : handleSearch}
             disabled={searchState === "loading"}
@@ -315,16 +309,16 @@ function RecommendationCard({
               ? "Mencari..."
               : searchState === "done"
                 ? "Cari Lagi"
-                : "Cari di Tokopedia"}
+                : "Cari di TikTok Shop"}
           </button>
         </div>
       </div>
 
-      {/* Tokopedia results */}
+      {/* Results */}
       {searchState === "done" && products.length > 0 && (
         <div className="mt-5 border-t border-border pt-4">
           <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-teal-700 dark:text-teal-400">
-            // HASIL TOKOPEDIA
+            // HASIL TIKTOK SHOP
           </p>
           <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
             {products.map((p, i) => (
@@ -362,7 +356,6 @@ export default function RecommendationsPage() {
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "Kamu";
 
-  // Fetch recommendations
   useEffect(() => {
     fetch("/api/recommendations")
       .then((r) => r.json())
@@ -375,7 +368,6 @@ export default function RecommendationsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Fetch wishlist IDs on mount
   useEffect(() => {
     fetch("/api/wishlist/ids")
       .then((r) => r.json())
@@ -431,6 +423,17 @@ export default function RecommendationsPage() {
             · {recommendations.length} kategori produk
           </p>
         )}
+      </div>
+
+      {/* Disclaimer */}
+      <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+        <AlertCircle size={15} className="mt-0.5 shrink-0 text-amber-500" />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Status afiliasi dan komisi produk dapat berubah sewaktu-waktu.
+          Pastikan kamu mengecek ulang ketersediaan program afiliasi langsung di{" "}
+          <span className="font-medium text-foreground">TikTok Shop</span>{" "}
+          sebelum mulai promosi.
+        </p>
       </div>
 
       {/* Cards */}

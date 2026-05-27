@@ -147,6 +147,7 @@ export async function POST(req: NextRequest) {
       $set: {
         userId: new ObjectId(session.user.id),
         tiktokUsername: profile.name,
+        avatarUrl: profile.avatar ?? profile.avatarLarger ?? null,
         nickName: profile.nickName ?? profile.name,
         contentDescription: profile.signature ?? "",
         followers: profile.fans ?? 0,

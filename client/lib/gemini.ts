@@ -55,7 +55,7 @@ export const analysisSchema = z.object({
           .array(z.string())
           .length(3)
           .describe(
-            "Tepat 3 keyword pencarian Tokopedia yang pendek dan natural (maks 4 kata per keyword), " +
+            "Tepat 3 keyword pencarian Tiktok Shop yang pendek dan natural (maks 4 kata per keyword), " +
               "seperti yang diketik orang saat belanja online. " +
               "Contoh bagus: 'sarung jempol gaming', 'kopi susu kemasan', 'earphone gaming murah'. " +
               "Contoh buruk: 'Sarung Jempol / Finger Sleeve Gaming untuk Mobile Legends', " +

@@ -45,7 +45,7 @@ export function WishlistCard({ items: initialItems }: Props) {
       `Tujuannya agar audiens tertarik dan mau membeli produk ini melalui link affiliate saya.`;
 
     const encoded = encodeURIComponent(prompt);
-    router.push(`/dashboard/chat?prompt=${encoded}`);
+    router.push(`/chat?prompt=${encoded}`);
   };
 
   if (items.length === 0) {
@@ -111,7 +111,7 @@ export function WishlistCard({ items: initialItems }: Props) {
               className="flex items-center gap-1 text-xs text-teal-600 transition-colors hover:underline dark:text-teal-400"
             >
               <ExternalLink size={11} />
-              Beli di Tokopedia
+              Cek di Tiktok Shop
             </a>
             <button
               type="button"
