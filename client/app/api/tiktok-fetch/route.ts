@@ -167,11 +167,5 @@ export async function POST(req: NextRequest) {
     { upsert: true, returnDocument: "after" },
   );
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  fetch(`${baseUrl}/api/analysis`, {
-    method: "POST",
-    headers: { cookie: req.headers.get("cookie") ?? "" },
-  }).catch(() => {});
-
   return NextResponse.json({ success: true, username: profile.name });
 }
