@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import type { WishlistItem } from "@/types";
 import { WishlistCard } from "@/components/shared/WishlistCard";
 
+export const metadata = { title: "Wishlist" };
+
 export default async function WishlistPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/login");
