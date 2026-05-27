@@ -21,6 +21,8 @@ import { ReAnalyzeButton } from "@/components/dashboard/ReAnalyzeButton";
 import { AIAnalysisWheel } from "@/components/dashboard/AIAnalysisWheel";
 import EmptyState from "@/components/shared/EmptyState";
 
+export const metadata = { title: "AI Analysis" };
+
 function toTitleCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

@@ -12,7 +12,10 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "InsightIQ — TikTok Affiliate Intelligence",
+  title: {
+    default: "InsightIQ",
+    template: "%s — InsightIQ",
+  },
   description: "AI-powered analytics platform for TikTok affiliate creators",
 };
 
