@@ -42,16 +42,16 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/5 rounded-xl p-6">
+    <div className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center gap-2.5 mb-5">
-        <span className="text-gray-400 dark:text-white/40">{icon}</span>
+        <span className="text-muted-foreground">{icon}</span>
         <div>
           {sublabel && (
-            <p className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-white/30 uppercase leading-none mb-0.5">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase leading-none mb-0.5">
               // {sublabel}
             </p>
           )}
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white leading-tight">
+          <h2 className="text-base font-semibold text-foreground leading-tight">
             {title}
           </h2>
         </div>
@@ -73,8 +73,8 @@ function Alert({
     <div
       className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg mt-3 ${
         isSuccess
-          ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400"
-          : "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
+          ? "bg-teal-500/10 text-teal-700 dark:text-teal-400"
+          : "bg-red-500/10 text-red-700 dark:text-red-400"
       }`}
     >
       {isSuccess ? (
@@ -121,7 +121,6 @@ export default function SettingsPage() {
     message: string;
   } | null>(null);
 
-  // TikTok re-sync state
   const [tiktokUsername, setTiktokUsername] = useState<string | null>(null);
   const [tiktokLoading, setTiktokLoading] = useState(false);
   const [tiktokFeedback, setTiktokFeedback] = useState<{
@@ -129,7 +128,6 @@ export default function SettingsPage() {
     message: string;
   } | null>(null);
 
-  // Telegram notification state
   const [tgConnected, setTgConnected] = useState(false);
   const [tgNotifEnabled, setTgNotifEnabled] = useState(false);
   const [tgNotifHour, setTgNotifHour] = useState(5);
@@ -145,7 +143,6 @@ export default function SettingsPage() {
     message: string;
   } | null>(null);
 
-  // Danger zone state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -154,12 +151,10 @@ export default function SettingsPage() {
     message: string;
   } | null>(null);
 
-  // Seed name from session
   useEffect(() => {
     if (session?.user?.name) setName(session.user.name);
   }, [session]);
 
-  // Fetch TikTok username from account
   useEffect(() => {
     fetch("/api/account")
       .then((r) => r.json())
@@ -172,7 +167,6 @@ export default function SettingsPage() {
       .catch(() => {});
   }, []);
 
-  // Fetch Telegram status
   useEffect(() => {
     fetch("/api/telegram/status")
       .then((r) => r.json())
@@ -201,7 +195,6 @@ export default function SettingsPage() {
         type: "success",
         message: "Nama berhasil diperbarui.",
       });
-      // setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
       setProfileFeedback({ type: "error", message: err.message });
     } finally {
@@ -269,12 +262,9 @@ export default function SettingsPage() {
       if (!fetchRes.ok)
         throw new Error(fetchData.error || "Gagal fetch data TikTok.");
       setTiktokUsername(tiktokInput);
-
       await fetch("/api/analysis", { method: "DELETE" });
-
       const analysisRes = await fetch("/api/analysis", { method: "POST" });
       if (!analysisRes.ok) throw new Error("Gagal menjalankan AI analysis.");
-
       setTiktokFeedback({
         type: "success",
         message: "Data TikTok dan AI analysis berhasil diperbarui.",
@@ -290,7 +280,9 @@ export default function SettingsPage() {
     setTgLoading(true);
     setTgFeedback(null);
     try {
-      const res = await fetch("/api/telegram/generate-code", { method: "POST" });
+      const res = await fetch("/api/telegram/generate-code", {
+        method: "POST",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal generate kode.");
       setTgVerifyCode(data.code);
@@ -313,9 +305,16 @@ export default function SettingsPage() {
       setTgNotifHour(data.notificationHour ?? 5);
       if (data.connected) {
         setTgVerifyCode(null);
-        setTgFeedback({ type: "success", message: "Telegram berhasil terhubung!" });
+        setTgFeedback({
+          type: "success",
+          message: "Telegram berhasil terhubung!",
+        });
       } else {
-        setTgFeedback({ type: "error", message: "Telegram belum terhubung. Pastikan sudah kirim kode ke bot." });
+        setTgFeedback({
+          type: "error",
+          message:
+            "Telegram belum terhubung. Pastikan sudah kirim kode ke bot.",
+        });
       }
     } catch {
       setTgFeedback({ type: "error", message: "Gagal cek status." });
@@ -349,7 +348,10 @@ export default function SettingsPage() {
       const res = await fetch("/api/telegram/test", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal kirim pesan tes.");
-      setTgFeedback({ type: "success", message: "Pesan tes berhasil dikirim ke Telegram kamu!" });
+      setTgFeedback({
+        type: "success",
+        message: "Pesan tes berhasil dikirim ke Telegram kamu!",
+      });
     } catch (err: any) {
       setTgFeedback({ type: "error", message: err.message });
     } finally {
@@ -397,6 +399,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex gap-8 max-w-4xl h-[calc(100vh-7rem)] -mb-16">
+      {/* Side nav */}
       <nav className="w-48 shrink-0 space-y-1 pt-1">
         {navItems.map((item) => (
           <button
@@ -404,20 +407,18 @@ export default function SettingsPage() {
             onClick={() =>
               item.ref.current?.scrollIntoView({ behavior: "smooth" })
             }
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <item.icon size={15} />
             {item.label}
           </button>
         ))}
       </nav>
+
       <div className="flex-1 min-w-0 space-y-6 overflow-y-auto pb-6 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+        {/* Your Account */}
         <div ref={accountRef}>
-          <Section
-            icon={<User size={18} />}
-            title="Your Account"
-            sublabel="SETTINGS"
-          >
+          <Section icon={<User size={18} />} title="Your Account">
             <div className="space-y-5">
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-sm">
@@ -438,7 +439,7 @@ export default function SettingsPage() {
                   <div className="relative flex-1">
                     <Link2
                       size={15}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                     />
                     <Input
                       value={tiktokInput}
@@ -462,7 +463,7 @@ export default function SettingsPage() {
                   </Button>
                 </div>
                 {tiktokUsername && (
-                  <p className="text-xs text-gray-400 dark:text-white/30">
+                  <p className="text-xs text-muted-foreground">
                     Last fetched:{" "}
                     <span className="font-mono">
                       {new Date().toLocaleDateString("id-ID", {
@@ -503,12 +504,9 @@ export default function SettingsPage() {
           </Section>
         </div>
 
+        {/* Change Password */}
         <div ref={passwordRef}>
-          <Section
-            icon={<Lock size={18} />}
-            title="Change Password"
-            sublabel="SECURITY"
-          >
+          <Section icon={<Lock size={18} />} title="Change Password">
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="currentPw" className="text-sm">
@@ -526,7 +524,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowCurrentPw((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white/60"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showCurrentPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -549,7 +547,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowNewPw((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white/60"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showNewPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -595,16 +593,14 @@ export default function SettingsPage() {
           </Section>
         </div>
 
+        {/* Notifikasi Telegram */}
         <div ref={notifRef}>
-          <Section
-            icon={<Bell size={18} />}
-            title="Notifikasi Telegram"
-            sublabel="NOTIFICATIONS"
-          >
+          <Section icon={<Bell size={18} />} title="Notifikasi Telegram">
             {!tgConnected ? (
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-white/40">
-                  Hubungkan Telegram kamu untuk menerima rekomendasi produk harian berdasarkan niche TikTok-mu.
+                <p className="text-sm text-muted-foreground">
+                  Hubungkan Telegram kamu untuk menerima rekomendasi produk
+                  harian berdasarkan niche TikTok-mu.
                 </p>
 
                 {!tgVerifyCode ? (
@@ -622,26 +618,35 @@ export default function SettingsPage() {
                   </Button>
                 ) : (
                   <div className="space-y-4">
-                    <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 space-y-3">
-                      <p className="text-sm font-medium text-gray-700 dark:text-white/70">
+                    <div className="bg-muted border border-border rounded-lg p-4 space-y-3">
+                      <p className="text-sm font-medium text-foreground">
                         Ikuti langkah berikut:
                       </p>
-                      <ol className="text-sm text-gray-600 dark:text-white/50 space-y-2 list-decimal list-inside">
-                        <li>Buka Telegram dan cari <span className="font-mono font-semibold text-gray-800 dark:text-white/80">@{tgBotUsername}</span></li>
+                      <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                        <li>
+                          Buka Telegram dan cari{" "}
+                          <span className="font-mono font-semibold text-foreground">
+                            @{tgBotUsername}
+                          </span>
+                        </li>
                         <li>Kirim pesan berikut ke bot:</li>
                       </ol>
-                      <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3">
+                      <div className="flex items-center gap-2 bg-background border border-border rounded-lg px-4 py-3">
                         <code className="flex-1 font-mono text-sm text-teal-600 dark:text-teal-400 select-all">
                           /start {tgVerifyCode}
                         </code>
                         <button
                           onClick={handleCopyCode}
-                          className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-white/60 transition-colors"
+                          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {tgCodeCopied ? <Check size={15} className="text-teal-500" /> : <Copy size={15} />}
+                          {tgCodeCopied ? (
+                            <Check size={15} className="text-teal-500" />
+                          ) : (
+                            <Copy size={15} />
+                          )}
                         </button>
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-white/30">
+                      <p className="text-xs text-muted-foreground">
                         Kode berlaku 15 menit. Setelah kirim, klik "Cek Status".
                       </p>
                     </div>
@@ -664,7 +669,7 @@ export default function SettingsPage() {
                         onClick={handleGenerateTgCode}
                         disabled={tgLoading}
                         variant="outline"
-                        className="h-9 px-4 text-sm text-gray-500"
+                        className="h-9 px-4 text-sm"
                       >
                         Minta Kode Baru
                       </Button>
@@ -688,10 +693,10 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-white/80">
+                      <p className="text-sm font-medium text-foreground">
                         Aktifkan Notifikasi Harian
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-white/30 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Terima rekomendasi produk setiap hari
                       </p>
                     </div>
@@ -700,7 +705,7 @@ export default function SettingsPage() {
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         tgNotifEnabled
                           ? "bg-teal-500"
-                          : "bg-gray-200 dark:bg-white/10"
+                          : "bg-muted-foreground/30"
                       }`}
                     >
                       <span
@@ -713,13 +718,15 @@ export default function SettingsPage() {
 
                   {tgNotifEnabled && (
                     <div className="space-y-1.5">
-                      <label className="text-sm text-gray-700 dark:text-white/60">
+                      <label className="text-sm text-muted-foreground">
                         Jam Notifikasi (WIB)
                       </label>
                       <select
                         value={tgNotifHour}
-                        onChange={(e) => handleTgHourChange(Number(e.target.value))}
-                        className="h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        onChange={(e) =>
+                          handleTgHourChange(Number(e.target.value))
+                        }
+                        className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500"
                       >
                         {Array.from({ length: 24 }, (_, i) => (
                           <option key={i} value={i}>
@@ -754,7 +761,7 @@ export default function SettingsPage() {
                     onClick={handleTgDisconnect}
                     disabled={tgDisconnectLoading}
                     variant="outline"
-                    className="h-9 px-4 text-sm font-semibold border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                    className="h-9 px-4 text-sm font-semibold border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/10"
                   >
                     {tgDisconnectLoading ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -768,13 +775,10 @@ export default function SettingsPage() {
           </Section>
         </div>
 
+        {/* Danger Zone */}
         <div ref={dangerRef}>
-          <Section
-            icon={<Trash2 size={18} />}
-            title="Danger Zone"
-            sublabel="ACCOUNT"
-          >
-            <p className="text-sm text-gray-500 dark:text-white/40 mb-4">
+          <Section icon={<Trash2 size={18} />} title="Danger Zone">
+            <p className="text-sm text-muted-foreground mb-4">
               Menghapus akun akan menghapus semua data kamu secara permanen —
               profil, data TikTok, dan semua hasil analisis. Tindakan ini tidak
               dapat dibatalkan.
@@ -782,7 +786,7 @@ export default function SettingsPage() {
             <Button
               onClick={() => setDeleteDialogOpen(true)}
               variant="outline"
-              className="h-9 px-5 text-sm font-semibold border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-300"
+              className="h-9 px-5 text-sm font-semibold border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/10 hover:border-red-500/40"
             >
               <Trash2 size={14} className="mr-2" />
               Hapus Akun

@@ -25,10 +25,12 @@ interface DailyActiveItem {
   users: number;
 }
 
-async function getDailyActive(): Promise<{ data: { day: string; users: number }[]; growth: number }> {
+async function getDailyActive(): Promise<{
+  data: { day: string; users: number }[];
+  growth: number;
+}> {
   const db = await getDb();
 
-  // Ambil semua data tanpa filter tanggal, lalu ambil 30 hari terakhir yang ada datanya
   const raw = (await db
     .collection("analyses")
     .aggregate([
@@ -52,13 +54,12 @@ async function getDailyActive(): Promise<{ data: { day: string; users: number }[
 
   const dailyMap = new Map(raw.map((d) => [d.date, d.users]));
 
-  // Bangun grid 30 hari mundur dari tanggal terbaru yang ada datanya
-  const latestDate = raw.length > 0 ? new Date(raw[raw.length - 1].date) : new Date();
+  const latestDate =
+    raw.length > 0 ? new Date(raw[raw.length - 1].date) : new Date();
   const data = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(latestDate);
     d.setDate(d.getDate() - (29 - i));
     const key = d.toISOString().slice(0, 10);
-    // Format DD/MM agar tidak ambigu saat lintas bulan
     const label = `${d.getDate()}/${d.getMonth() + 1}`;
     return { day: label, users: dailyMap.get(key) ?? 0 };
   });
@@ -142,65 +143,71 @@ export default async function AdminPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">
+        <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
           // ADMIN
         </p>
-        <h1 className="text-2xl font-bold text-gray-900">Platform Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Platform Overview
+        </h1>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
-            <CardTitle className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Total Users
             </CardTitle>
-            <Users className="h-4 w-4 text-gray-400" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">{stats.users}</p>
-            <p className="text-xs text-green-500 mt-1">Platform members</p>
+            <p className="text-3xl font-bold text-foreground">{stats.users}</p>
+            <p className="text-xs text-teal-500 mt-1">Platform members</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
-            <CardTitle className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Total Analyses
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-gray-400" />
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">{stats.analyses}</p>
-            <p className="text-xs text-green-500 mt-1">AI analyses run</p>
+            <p className="text-3xl font-bold text-foreground">
+              {stats.analyses}
+            </p>
+            <p className="text-xs text-teal-500 mt-1">AI analyses run</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
-            <CardTitle className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Onboarded Accounts
             </CardTitle>
-            <Activity className="h-4 w-4 text-gray-400" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">{stats.accounts}</p>
-            <p className="text-xs text-green-500 mt-1">TikTok accounts</p>
+            <p className="text-3xl font-bold text-foreground">
+              {stats.accounts}
+            </p>
+            <p className="text-xs text-teal-500 mt-1">TikTok accounts</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
-            <CardTitle className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Avg Confidence
             </CardTitle>
-            <Brain className="h-4 w-4 text-gray-400" />
+            <Brain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-foreground">
               {stats.avgConfidence}%
             </p>
-            <p className="text-xs text-green-500 mt-1">AI niche accuracy</p>
+            <p className="text-xs text-teal-500 mt-1">AI niche accuracy</p>
           </CardContent>
         </Card>
       </div>
@@ -213,14 +220,18 @@ export default async function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold text-foreground">
               Niche Distribution
             </CardTitle>
-            <p className="text-xs text-gray-400">Top niche di platform</p>
+            <p className="text-xs text-muted-foreground">
+              Top niche di platform
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {stats.niches.length === 0 ? (
-              <p className="text-sm text-gray-400">Belum ada data niche.</p>
+              <p className="text-sm text-muted-foreground">
+                Belum ada data niche.
+              </p>
             ) : (
               stats.niches.map((n) => {
                 const pct = Math.round(
@@ -229,10 +240,12 @@ export default async function AdminPage() {
                 return (
                   <div key={n._id} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-700 font-medium">{n._id}</span>
-                      <span className="text-gray-500">{n.count}</span>
+                      <span className="text-foreground font-medium">
+                        {n._id}
+                      </span>
+                      <span className="text-muted-foreground">{n.count}</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                    <div className="w-full bg-muted rounded-full h-1.5">
                       <div
                         className="bg-teal-500 h-1.5 rounded-full"
                         style={{ width: `${pct}%` }}
@@ -250,14 +263,16 @@ export default async function AdminPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold text-foreground">
               Recent Platform Activity
             </CardTitle>
-            <p className="text-xs text-gray-400 mt-0.5">Last 20 events</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Last 20 events
+            </p>
           </div>
           <Link
             href="/admin/users"
-            className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+            className="text-sm text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
           >
             View all users →
           </Link>
@@ -265,36 +280,42 @@ export default async function AdminPage() {
         <CardContent>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-gray-400 uppercase border-b">
+              <tr className="text-xs text-muted-foreground uppercase border-b border-border">
                 <th className="text-left pb-2 font-medium">Event</th>
                 <th className="text-left pb-2 font-medium">User</th>
                 <th className="text-left pb-2 font-medium">Detail</th>
                 <th className="text-right pb-2 font-medium">Time</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               {stats.recentActivity.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-400">
+                  <td
+                    colSpan={4}
+                    className="py-8 text-center text-muted-foreground"
+                  >
                     Belum ada aktivitas.
                   </td>
                 </tr>
               ) : (
                 stats.recentActivity.map((a, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
+                  <tr key={i} className="hover:bg-muted/50 transition-colors">
                     <td className="py-3">
-                      <Badge variant="outline" className="text-[10px] font-mono">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-mono"
+                      >
                         NEW_ANALYSIS
                       </Badge>
                     </td>
-                    <td className="py-3 font-medium text-gray-800">
+                    <td className="py-3 font-medium text-foreground">
                       {a.user?.[0]?.name ?? "Unknown"}
                     </td>
-                    <td className="py-3 text-gray-500">
+                    <td className="py-3 text-muted-foreground">
                       Niche detected: {a.primaryNiche ?? "-"}
                       {a.confidenceScore ? ` (${a.confidenceScore}% conf)` : ""}
                     </td>
-                    <td className="py-3 text-right text-gray-400">
+                    <td className="py-3 text-right text-muted-foreground">
                       {a.createdAt ? timeAgo(a.createdAt) : "-"}
                     </td>
                   </tr>
