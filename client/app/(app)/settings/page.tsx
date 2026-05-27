@@ -11,10 +11,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  AtSign,
   Eye,
   EyeOff,
   Link2,
+  Bell,
+  Send,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,11 +93,13 @@ export default function SettingsPage() {
 
   const accountRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
   const dangerRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
     { label: "Your Account", icon: User, ref: accountRef },
     { label: "Change Password", icon: Lock, ref: passwordRef },
+    { label: "Notifikasi Telegram", icon: Bell, ref: notifRef },
     { label: "Danger Zone", icon: Trash2, ref: dangerRef },
   ];
 
@@ -124,6 +129,22 @@ export default function SettingsPage() {
     message: string;
   } | null>(null);
 
+  // Telegram notification state
+  const [tgConnected, setTgConnected] = useState(false);
+  const [tgNotifEnabled, setTgNotifEnabled] = useState(false);
+  const [tgNotifHour, setTgNotifHour] = useState(5);
+  const [tgVerifyCode, setTgVerifyCode] = useState<string | null>(null);
+  const [tgBotUsername, setTgBotUsername] = useState("InsightIQ_Bot");
+  const [tgCodeCopied, setTgCodeCopied] = useState(false);
+  const [tgLoading, setTgLoading] = useState(false);
+  const [tgCheckLoading, setTgCheckLoading] = useState(false);
+  const [tgTestLoading, setTgTestLoading] = useState(false);
+  const [tgDisconnectLoading, setTgDisconnectLoading] = useState(false);
+  const [tgFeedback, setTgFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
   // Danger zone state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -147,6 +168,18 @@ export default function SettingsPage() {
           setTiktokUsername(data.account.tiktokUsername);
           setTiktokInput(data.account.tiktokUsername);
         }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch Telegram status
+  useEffect(() => {
+    fetch("/api/telegram/status")
+      .then((r) => r.json())
+      .then((data) => {
+        setTgConnected(data.connected ?? false);
+        setTgNotifEnabled(data.notificationEnabled ?? false);
+        setTgNotifHour(data.notificationHour ?? 5);
       })
       .catch(() => {});
   }, []);
@@ -251,6 +284,101 @@ export default function SettingsPage() {
     } finally {
       setTiktokLoading(false);
     }
+  }
+
+  async function handleGenerateTgCode() {
+    setTgLoading(true);
+    setTgFeedback(null);
+    try {
+      const res = await fetch("/api/telegram/generate-code", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal generate kode.");
+      setTgVerifyCode(data.code);
+      setTgBotUsername(data.botUsername);
+    } catch (err: any) {
+      setTgFeedback({ type: "error", message: err.message });
+    } finally {
+      setTgLoading(false);
+    }
+  }
+
+  async function handleCheckTgStatus() {
+    setTgCheckLoading(true);
+    setTgFeedback(null);
+    try {
+      const res = await fetch("/api/telegram/status");
+      const data = await res.json();
+      setTgConnected(data.connected ?? false);
+      setTgNotifEnabled(data.notificationEnabled ?? false);
+      setTgNotifHour(data.notificationHour ?? 5);
+      if (data.connected) {
+        setTgVerifyCode(null);
+        setTgFeedback({ type: "success", message: "Telegram berhasil terhubung!" });
+      } else {
+        setTgFeedback({ type: "error", message: "Telegram belum terhubung. Pastikan sudah kirim kode ke bot." });
+      }
+    } catch {
+      setTgFeedback({ type: "error", message: "Gagal cek status." });
+    } finally {
+      setTgCheckLoading(false);
+    }
+  }
+
+  async function handleTgNotifToggle(enabled: boolean) {
+    setTgNotifEnabled(enabled);
+    await fetch("/api/telegram/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificationEnabled: enabled }),
+    });
+  }
+
+  async function handleTgHourChange(hour: number) {
+    setTgNotifHour(hour);
+    await fetch("/api/telegram/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificationHour: hour }),
+    });
+  }
+
+  async function handleTgTest() {
+    setTgTestLoading(true);
+    setTgFeedback(null);
+    try {
+      const res = await fetch("/api/telegram/test", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal kirim pesan tes.");
+      setTgFeedback({ type: "success", message: "Pesan tes berhasil dikirim ke Telegram kamu!" });
+    } catch (err: any) {
+      setTgFeedback({ type: "error", message: err.message });
+    } finally {
+      setTgTestLoading(false);
+    }
+  }
+
+  async function handleTgDisconnect() {
+    setTgDisconnectLoading(true);
+    setTgFeedback(null);
+    try {
+      const res = await fetch("/api/telegram/disconnect", { method: "DELETE" });
+      if (!res.ok) throw new Error("Gagal memutus koneksi.");
+      setTgConnected(false);
+      setTgNotifEnabled(false);
+      setTgVerifyCode(null);
+      setTgFeedback({ type: "success", message: "Telegram berhasil diputus." });
+    } catch (err: any) {
+      setTgFeedback({ type: "error", message: err.message });
+    } finally {
+      setTgDisconnectLoading(false);
+    }
+  }
+
+  function handleCopyCode() {
+    if (!tgVerifyCode) return;
+    navigator.clipboard.writeText(`/start ${tgVerifyCode}`);
+    setTgCodeCopied(true);
+    setTimeout(() => setTgCodeCopied(false), 2000);
   }
 
   async function handleDeleteAccount() {
@@ -464,6 +592,179 @@ export default function SettingsPage() {
                 )}
               </Button>
             </div>
+          </Section>
+        </div>
+
+        <div ref={notifRef}>
+          <Section
+            icon={<Bell size={18} />}
+            title="Notifikasi Telegram"
+            sublabel="NOTIFICATIONS"
+          >
+            {!tgConnected ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 dark:text-white/40">
+                  Hubungkan Telegram kamu untuk menerima rekomendasi produk harian berdasarkan niche TikTok-mu.
+                </p>
+
+                {!tgVerifyCode ? (
+                  <Button
+                    onClick={handleGenerateTgCode}
+                    disabled={tgLoading}
+                    className="h-9 px-5 text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-white gap-2"
+                  >
+                    {tgLoading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Send size={14} />
+                    )}
+                    Hubungkan Telegram
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 space-y-3">
+                      <p className="text-sm font-medium text-gray-700 dark:text-white/70">
+                        Ikuti langkah berikut:
+                      </p>
+                      <ol className="text-sm text-gray-600 dark:text-white/50 space-y-2 list-decimal list-inside">
+                        <li>Buka Telegram dan cari <span className="font-mono font-semibold text-gray-800 dark:text-white/80">@{tgBotUsername}</span></li>
+                        <li>Kirim pesan berikut ke bot:</li>
+                      </ol>
+                      <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3">
+                        <code className="flex-1 font-mono text-sm text-teal-600 dark:text-teal-400 select-all">
+                          /start {tgVerifyCode}
+                        </code>
+                        <button
+                          onClick={handleCopyCode}
+                          className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-white/60 transition-colors"
+                        >
+                          {tgCodeCopied ? <Check size={15} className="text-teal-500" /> : <Copy size={15} />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400 dark:text-white/30">
+                        Kode berlaku 15 menit. Setelah kirim, klik "Cek Status".
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleCheckTgStatus}
+                        disabled={tgCheckLoading}
+                        variant="outline"
+                        className="h-9 px-4 text-sm gap-2"
+                      >
+                        {tgCheckLoading ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <RefreshCw size={13} />
+                        )}
+                        Cek Status
+                      </Button>
+                      <Button
+                        onClick={handleGenerateTgCode}
+                        disabled={tgLoading}
+                        variant="outline"
+                        className="h-9 px-4 text-sm text-gray-500"
+                      >
+                        Minta Kode Baru
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {tgFeedback && (
+                  <Alert type={tgFeedback.type} message={tgFeedback.message} />
+                )}
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-teal-500" />
+                  <span className="text-sm font-medium text-teal-600 dark:text-teal-400">
+                    Telegram terhubung
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/80">
+                        Aktifkan Notifikasi Harian
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-white/30 mt-0.5">
+                        Terima rekomendasi produk setiap hari
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleTgNotifToggle(!tgNotifEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        tgNotifEnabled
+                          ? "bg-teal-500"
+                          : "bg-gray-200 dark:bg-white/10"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          tgNotifEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {tgNotifEnabled && (
+                    <div className="space-y-1.5">
+                      <label className="text-sm text-gray-700 dark:text-white/60">
+                        Jam Notifikasi (WIB)
+                      </label>
+                      <select
+                        value={tgNotifHour}
+                        onChange={(e) => handleTgHourChange(Number(e.target.value))}
+                        className="h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {String(i).padStart(2, "0")}:00 WIB
+                            {i === 5 ? " (default)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {tgFeedback && (
+                  <Alert type={tgFeedback.type} message={tgFeedback.message} />
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleTgTest}
+                    disabled={tgTestLoading}
+                    variant="outline"
+                    className="h-9 px-4 text-sm gap-2"
+                  >
+                    {tgTestLoading ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <Send size={13} />
+                    )}
+                    Kirim Pesan Tes
+                  </Button>
+                  <Button
+                    onClick={handleTgDisconnect}
+                    disabled={tgDisconnectLoading}
+                    variant="outline"
+                    className="h-9 px-4 text-sm font-semibold border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                  >
+                    {tgDisconnectLoading ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      "Putuskan"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </Section>
         </div>
 
