@@ -228,10 +228,8 @@ function RecommendationCard({
         </div>
       )}
 
-      <div
-        className="grid items-start gap-5"
-        style={{ gridTemplateColumns: "52px 1fr 200px" }}
-      >
+      {/* Responsive grid: 2-col on mobile, 3-col on sm+ */}
+      <div className="grid grid-cols-[52px_1fr] sm:grid-cols-[52px_1fr_200px] items-start gap-3 sm:gap-5">
         {/* Numbered badge */}
         <div
           className={`flex h-[52px] w-[52px] items-center justify-center rounded-xl font-mono text-xl font-semibold ${
@@ -272,9 +270,9 @@ function RecommendationCard({
           )}
         </div>
 
-        {/* Score + button */}
-        <div className="flex flex-col items-end gap-3">
-          <div className="text-right">
+        {/* Score + button — full width on mobile (col-span-2), right column on sm+ */}
+        <div className="col-span-2 sm:col-span-1 flex flex-col gap-3 sm:items-end">
+          <div className="sm:text-right">
             <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
               MATCH SCORE
             </p>

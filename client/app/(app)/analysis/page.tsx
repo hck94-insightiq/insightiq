@@ -39,6 +39,14 @@ function fmtViews(n: number): string {
   return n.toLocaleString("id-ID");
 }
 
+// Abbreviated format for narrow grid cells (K/M) — avoids overflow on mobile
+function fmtViewsShort(n: number): string {
+  if (n === 0) return "0";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
+
 // ─── Derive key insight per section from real data ────────────────────────────
 
 function derivePolaKey(account: any, bestDay: any): string {
@@ -372,20 +380,20 @@ export default async function AnalysisPage() {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-3">
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-3">
             {postingDays.map((d) => {
               const isBest = bestDay?.day === d.day;
               return (
                 <div
                   key={d.day}
-                  className={`rounded-xl border p-3.5 text-center ${
+                  className={`rounded-xl border p-1.5 sm:p-3.5 text-center ${
                     isBest
                       ? "border-teal-500/40 bg-teal-500/[0.08]"
                       : "border-border bg-muted/40"
                   }`}
                 >
                   <p
-                    className={`mb-2 font-mono text-[11px] font-medium ${
+                    className={`mb-1 sm:mb-2 font-mono text-[10px] sm:text-[11px] font-medium ${
                       isBest
                         ? "text-teal-600 dark:text-teal-400"
                         : "text-muted-foreground"
@@ -393,13 +401,13 @@ export default async function AnalysisPage() {
                   >
                     {d.day}
                   </p>
-                  <p className="font-mono text-[10px] text-muted-foreground mb-1">
+                  <p className="hidden sm:block font-mono text-[10px] text-muted-foreground mb-1">
                     avg views
                   </p>
-                  <p className="font-mono text-sm font-semibold leading-tight tracking-tight">
-                    {fmtViews(d.avgViews)}
+                  <p className="font-mono text-[10px] sm:text-sm font-semibold leading-tight tracking-tight">
+                    {fmtViewsShort(d.avgViews)}
                   </p>
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  <p className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-muted-foreground">
                     {d.count}x
                   </p>
                 </div>

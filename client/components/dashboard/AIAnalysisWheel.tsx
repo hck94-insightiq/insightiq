@@ -112,8 +112,6 @@ const SECTIONS = [
   },
 ] as const;
 
-// ─── Shared insight block ─────────────────────────────────────────────────────
-
 function Insight({ text }: { text?: string }) {
   if (!text) return null;
   return (
@@ -144,27 +142,36 @@ function PolaDetail({
         ? `${(n / 1_000).toFixed(0)}K`
         : "0";
   return (
-    <div className="flex flex-col h-full gap-3">
-      {/* Bar chart — flex-1 fills available height */}
-      <div className="flex-1 min-h-0 grid grid-cols-7 gap-1.5">
+    <div className="flex flex-col gap-3">
+      {/* 7-col bar chart — shrink padding on mobile */}
+      <div className="grid grid-cols-7 gap-1">
         {postingDays.map((d) => {
           const isBest = bestDay?.day === d.day;
           return (
             <div
               key={d.day}
-              className={`flex flex-col items-center gap-1 rounded-xl p-2 ${isBest ? "bg-teal-500/15 border border-teal-500/40" : "bg-muted/40 border border-border"}`}
+              className={`flex flex-col items-center gap-0.5 rounded-lg p-1 sm:p-2 ${
+                isBest
+                  ? "bg-teal-500/15 border border-teal-500/40"
+                  : "bg-muted/40 border border-border"
+              }`}
             >
               <span
-                className={`font-mono text-xs font-medium shrink-0 ${isBest ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"}`}
+                className={`font-mono text-[10px] sm:text-xs font-medium shrink-0 ${
+                  isBest
+                    ? "text-teal-600 dark:text-teal-400"
+                    : "text-muted-foreground"
+                }`}
               >
                 {d.day}
               </span>
-              {/* Bar grows to fill remaining space */}
-              <div className="w-full flex-1 flex items-end justify-center min-h-0">
+              {/* Mini bar */}
+              <div className="w-full h-10 sm:h-14 flex items-end justify-center">
                 <div
                   className="w-full rounded-sm"
                   style={{
                     height: `${(d.avgViews / maxViews) * 100}%`,
+                    minHeight: 2,
                     background: isBest
                       ? "oklch(0.68 0.13 195)"
                       : "oklch(0.68 0.13 195 / 0.28)",
@@ -172,23 +179,28 @@ function PolaDetail({
                 />
               </div>
               <span
-                className={`font-mono text-xs font-semibold shrink-0 ${isBest ? "text-teal-600 dark:text-teal-400" : "text-foreground"}`}
+                className={`font-mono text-[9px] sm:text-xs font-semibold shrink-0 ${
+                  isBest
+                    ? "text-teal-600 dark:text-teal-400"
+                    : "text-foreground"
+                }`}
               >
                 {fmt(d.avgViews)}
               </span>
-              <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+              <span className="font-mono text-[9px] text-muted-foreground shrink-0">
                 {d.count}x
               </span>
             </div>
           );
         })}
       </div>
+
       {hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 shrink-0">
           {hashtags.slice(0, 6).map((h) => (
             <span
               key={h}
-              className="rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
+              className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] sm:text-xs text-muted-foreground"
             >
               #{h}
             </span>
@@ -211,22 +223,23 @@ function AudienceDetail({
 }) {
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Stat boxes — flex-1 fills remaining height, distributed evenly */}
-      <div className="flex-1 min-h-0 flex flex-col gap-3">
-        <div className="flex-1 min-h-0 rounded-xl border border-border bg-muted/40 px-4 py-4 flex flex-col justify-center">
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
+        <div className="rounded-xl border border-border bg-muted/40 px-4 py-3">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
             Age Range
           </p>
-          <p className="text-3xl font-semibold tracking-tight">
+          {/* Reduced from text-3xl — too big on mobile for longer strings */}
+          <p className="text-xl sm:text-3xl font-semibold tracking-tight">
             {audienceProfile?.ageRange ?? "—"}
           </p>
         </div>
-        <div className="flex-1 min-h-0 rounded-xl border border-teal-500/25 bg-teal-500/8 px-4 py-4 flex flex-col justify-center">
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.06em] text-teal-600 dark:text-teal-400">
+        <div className="rounded-xl border border-teal-500/25 bg-teal-500/8 px-4 py-3">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-teal-600 dark:text-teal-400">
             Purchase Power
           </p>
-          <p className="text-2xl font-semibold tracking-tight">
+          {/* Reduced from text-2xl — long Rp strings overflow on mobile */}
+          <p className="text-base sm:text-xl font-semibold tracking-tight leading-snug">
             {cap(audienceProfile?.purchasePower ?? "—")}
           </p>
         </div>
@@ -274,11 +287,16 @@ function EngagementDetail({
   });
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0 flex items-center gap-6">
-        {/* Donut — fills available height, stays square */}
-        <div className="h-full aspect-square shrink-0 flex items-center justify-center">
-          <svg viewBox="0 0 120 120" style={{ width: "100%", height: "100%" }}>
+    <div className="flex flex-col gap-4">
+      {/* Mobile: donut + legend side by side in a row; insight below */}
+      {/* Desktop: all three in one row */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+        {/* Donut — fixed size on mobile, fills height on desktop */}
+        <div className="flex justify-center sm:justify-start">
+          <svg
+            viewBox="0 0 120 120"
+            className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] shrink-0"
+          >
             <circle
               cx="60"
               cy="60"
@@ -329,33 +347,31 @@ function EngagementDetail({
           </svg>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-col gap-4 justify-center shrink-0">
+        {/* Legend — horizontal wrap on mobile, vertical on sm+ */}
+        <div className="flex flex-wrap gap-x-4 gap-y-2 sm:flex-col sm:gap-3 justify-center sm:justify-start">
           {items.map((item, i) => (
-            <div key={item.label} className="flex items-center gap-3">
+            <div key={item.label} className="flex items-center gap-2.5">
               <span
-                className="h-3.5 w-3.5 shrink-0 rounded-sm"
+                className="h-3 w-3 shrink-0 rounded-sm"
                 style={{ background: COLORS[i] }}
               />
-              <span className="text-base text-muted-foreground w-24">
+              <span className="text-sm text-muted-foreground w-20 sm:w-24">
                 {item.label}
               </span>
-              <span className="font-mono text-base font-bold">
+              <span className="font-mono text-sm font-bold">
                 {pct(item.value)}%
               </span>
             </div>
           ))}
         </div>
-
-        {/* Insight di samping legend */}
-        {insight && (
-          <div className="flex-1 min-w-0 border-l-2 border-teal-500/50 pl-5 flex items-center">
-            <p className="text-sm leading-relaxed text-foreground/70">
-              {insight}
-            </p>
-          </div>
-        )}
       </div>
+
+      {/* Insight — always full width below on mobile */}
+      {insight && (
+        <p className="text-sm leading-relaxed text-foreground/70 border-l-2 border-teal-500/50 pl-3">
+          {insight}
+        </p>
+      )}
     </div>
   );
 }
@@ -372,29 +388,34 @@ function PeluangDetail({
   const sorted = [...(nicheBreakdown ?? [])].sort((a, b) => b.score - a.score);
   const best = sorted[0]?.score ?? 1;
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Container utama diubah jadi CSS Grid */}
-      <div className="flex-1 min-h-0 grid grid-cols-[auto_1fr_auto] items-center gap-x-4 content-around">
+    <div className="flex flex-col gap-4">
+      {/*
+        Mobile:  grid-cols-[80px_1fr_28px]  — fixed label width, truncate
+        sm+:     grid-cols-[max-content_1fr_28px] — label column auto-sizes to
+                 the longest label; all bars start at the same position
+        `contents` on the row wrapper makes children direct grid items
+      */}
+      <div className="grid grid-cols-[max-content_1fr_28px] gap-x-2 sm:gap-x-3 gap-y-2 sm:gap-y-3">
         {sorted.map((item, i) => {
           const isLowest = i === sorted.length - 1;
           return (
-            // Menggunakan "contents" agar anak-anaknya langsung menjadi grid item
             <div key={item.niche} className="contents">
+              {/* Label */}
               <span
-                // Truncate diganti jadi whitespace-nowrap agar kolom melebar sesuai teks terpanjang
-                className={`font-mono text-base whitespace-nowrap ${
+                className={`font-mono text-xs sm:text-sm self-center truncate sm:whitespace-nowrap ${
                   isLowest
                     ? "text-amber-500 font-semibold"
                     : "text-muted-foreground"
                 }`}
+                title={item.niche}
               >
                 {item.niche}
               </span>
 
-              {/* flex-1 diganti menjadi w-full karena sudah ada di kolom 1fr */}
-              <div className="w-full h-12 rounded-xl overflow-hidden bg-muted/60">
+              {/* Bar */}
+              <div className="h-7 sm:h-10 rounded-lg overflow-hidden bg-muted/60 self-center">
                 <div
-                  className="h-full rounded-xl"
+                  className="h-full rounded-lg transition-[width] duration-500"
                   style={{
                     width: `${(item.score / best) * 100}%`,
                     background: isLowest
@@ -404,8 +425,9 @@ function PeluangDetail({
                 />
               </div>
 
+              {/* Score */}
               <span
-                className={`font-mono text-2xl font-bold w-10 text-right shrink-0 ${
+                className={`font-mono text-base sm:text-xl font-bold text-right self-center ${
                   isLowest ? "text-amber-500" : ""
                 }`}
               >
@@ -465,9 +487,11 @@ export function AIAnalysisWheel({
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-      {/* Wheel */}
-      <div className="relative shrink-0" style={{ width: 220, height: 220 }}>
-        {/* 1. SVG murni untuk Chart Donut saja */}
+      {/* Wheel — centered on mobile */}
+      <div
+        className="mx-auto lg:mx-0 relative shrink-0"
+        style={{ width: 220, height: 220 }}
+      >
         <svg width="220" height="220" viewBox="0 0 220 220">
           {SECTIONS.map((s) => {
             const isSelected = selected === s.id;
@@ -486,7 +510,7 @@ export function AIAnalysisWheel({
           })}
         </svg>
 
-        {/* 2. HTML Overlay untuk Lingkaran Tengah (Perfect Center, Adaptive Light/Dark, Bold) */}
+        {/* Center circle */}
         <div
           className="absolute inset-0 m-auto flex flex-col items-center justify-center rounded-full bg-white dark:bg-[#111] shadow-md dark:shadow-none pointer-events-none transition-colors"
           style={{ width: (RI - 2) * 2, height: (RI - 2) * 2 }}
@@ -499,7 +523,6 @@ export function AIAnalysisWheel({
               >
                 {selectedSection.label.split(" ")[0]}
               </span>
-              {/* Render baris kedua HANYA jika memang ada lebih dari 1 kata */}
               {selectedSection.label.split(" ").length > 1 && (
                 <span
                   className="font-mono text-[8px] font-semibold leading-none mt-1"
@@ -518,7 +541,7 @@ export function AIAnalysisWheel({
           )}
         </div>
 
-        {/* 3. Overlay Icon di atas Section */}
+        {/* Icon overlays */}
         {SECTIONS.map((s) => {
           const c = centroid(CX, CY, (RI + RO) / 2, s.a1, s.a2);
           const isSelected = selected === s.id;
@@ -531,13 +554,11 @@ export function AIAnalysisWheel({
             >
               <Icon
                 size={18}
-                // Hapus inline style color, gunakan Tailwind agar adaptif Light/Dark mode
                 className={`transition-all duration-200 ${
                   isSelected
                     ? "text-white drop-shadow-sm"
                     : "text-teal-950/40 dark:text-white/40"
                 }`}
-                // Bikin icon sedikit lebih tebal saat dipilih
                 strokeWidth={isSelected ? 2.5 : 2}
               />
               <span
@@ -554,16 +575,16 @@ export function AIAnalysisWheel({
         })}
       </div>
 
-      {/* Detail panel (Tetap sama) */}
+      {/* Detail panel — auto height on mobile, fixed on lg */}
       <div className="flex-1 min-w-0">
         {!selected ? (
-          <div className="flex h-[400px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border">
+          <div className="flex h-32 lg:h-[400px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border">
             <p className="font-mono text-xs text-muted-foreground">
               Klik section untuk lihat detail
             </p>
           </div>
         ) : (
-          <div className="flex h-[400px] flex-col rounded-2xl border border-border bg-card p-5 gap-4">
+          <div className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 gap-4">
             {/* Header */}
             <div className="flex items-center gap-2.5 shrink-0">
               {selectedSection && (
@@ -587,7 +608,7 @@ export function AIAnalysisWheel({
               </div>
             </div>
             {/* Content */}
-            <div className="flex-1 min-h-0">{detailContent[selected]}</div>
+            <div>{detailContent[selected]}</div>
           </div>
         )}
       </div>

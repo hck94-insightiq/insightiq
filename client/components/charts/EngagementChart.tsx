@@ -72,7 +72,7 @@ export default function EngagementChart({ account }: Props) {
                 tickFormatter={formatNum}
                 tickLine={false}
                 axisLine={false}
-                width={50}
+                width={42}
                 tick={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono, monospace)",

@@ -92,25 +92,25 @@ export default function KpiCards({ account, analysis }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
       {kpis.map(({ label, value, delta, icon: Icon, tone, accent }) => {
         if (accent) {
           return (
             <div
               key={label}
-              className="relative overflow-hidden rounded-xl bg-foreground dark:bg-teal-500/[0.04] dark:border dark:border-teal-500/40 p-5 text-background dark:text-foreground"
+              className="relative overflow-hidden rounded-xl bg-foreground dark:bg-teal-500/[0.04] dark:border dark:border-teal-500/40 p-4 sm:p-5 text-background dark:text-foreground"
             >
               <div className="flex items-start justify-between">
-                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-background/55 dark:text-muted-foreground">
+                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.06em] text-background/55 dark:text-muted-foreground">
                   {label}
                 </span>
-                <Icon size={14} className="text-teal-400" />
+                <Icon size={13} className="text-teal-400 shrink-0" />
               </div>
-              <p className="mt-2 font-mono text-[26px] font-semibold leading-none tracking-tight">
+              <p className="mt-2 font-mono text-[20px] sm:text-[26px] font-semibold leading-none tracking-tight">
                 {value}
               </p>
-              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-teal-400">
-                <TrendingUp size={12} /> {delta}
+              <p className="mt-2 inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-teal-400 truncate">
+                <TrendingUp size={11} /> {delta}
               </p>
             </div>
           );
@@ -125,21 +125,21 @@ export default function KpiCards({ account, analysis }: Props) {
         return (
           <div
             key={label}
-            className="relative overflow-hidden rounded-xl border border-border bg-card p-5"
+            className="relative overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-5"
           >
             <div className="flex items-start justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+              <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                 {label}
               </span>
-              <Icon size={14} className="text-muted-foreground" />
+              <Icon size={13} className="text-muted-foreground shrink-0" />
             </div>
-            <p className="mt-2 font-mono text-[26px] font-semibold leading-none tracking-tight">
+            <p className="mt-2 font-mono text-[20px] sm:text-[26px] font-semibold leading-none tracking-tight">
               {value}
             </p>
             <p
-              className={`mt-2 inline-flex items-center gap-1 text-[11px] font-medium ${deltaColor}`}
+              className={`mt-2 inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium truncate ${deltaColor}`}
             >
-              <DeltaIcon size={12} /> {delta}
+              <DeltaIcon size={11} /> {delta}
             </p>
           </div>
         );

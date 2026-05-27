@@ -496,9 +496,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex gap-8 max-w-4xl h-[calc(100vh-7rem)] -mb-16">
-      {/* Side nav */}
-      <nav className="w-48 shrink-0 space-y-1 pt-1">
+    <div className="flex flex-col gap-6 md:flex-row md:gap-8 md:max-w-4xl md:h-[calc(100vh-7rem)] md:-mb-16">
+      {/* Side nav — hidden on mobile, visible on md+ */}
+      <nav className="hidden md:block md:w-48 md:shrink-0 md:space-y-1 md:pt-1">
         {navItems.map((item) => (
           <button
             key={item.label}
@@ -513,7 +513,7 @@ export default function SettingsPage() {
         ))}
       </nav>
 
-      <div className="flex-1 min-w-0 space-y-6 overflow-y-auto pb-6 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+      <div className="flex-1 min-w-0 space-y-6 pb-6 md:overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
         {/* Your Account */}
         <div ref={accountRef}>
           <Section icon={<User size={18} />} title="Your Account">
