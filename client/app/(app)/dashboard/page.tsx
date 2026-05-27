@@ -16,6 +16,8 @@ import ProductMatchChart from "@/components/charts/ProductMatchChart";
 import PostingTimeChart from "@/components/charts/PostingTimeChart";
 import { Account, Analysis } from "@/types";
 
+export const metadata = { title: "Dashboard" };
+
 function relativeTime(date: string | Date): string {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   if (diff < 60) return "baru saja";
