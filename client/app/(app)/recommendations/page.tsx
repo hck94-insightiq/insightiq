@@ -35,7 +35,15 @@ interface TokopediaProduct {
 
 // ─── Tokopedia product card ───────────────────────────────────────────────────
 
-function ProductCard({ p }: { p: TokopediaProduct }) {
+function ProductCard({
+  p,
+  wishlistedIds,
+  onWishlistChange,
+}: {
+  p: TokopediaProduct;
+  wishlistedIds: Set<string>;
+  onWishlistChange: (id: string, added: boolean) => void;
+}) {
   return (
     <a
       href={p.url ?? "#"}
@@ -57,6 +65,8 @@ function ProductCard({ p }: { p: TokopediaProduct }) {
               shopName: p.shopName ?? "",
               shopUrl: p.shopUrl ?? "",
             }}
+            initialWished={wishlistedIds.has(p.productId)}
+            onToggle={(isWished) => onWishlistChange(p.productId!, isWished)}
           />
         </div>
       )}
@@ -105,9 +115,13 @@ function ProductCard({ p }: { p: TokopediaProduct }) {
 function RecommendationCard({
   rec,
   index,
+  wishlistedIds,
+  onWishlistChange,
 }: {
   rec: Recommendation;
   index: number;
+  wishlistedIds: Set<string>;
+  onWishlistChange: (id: string, added: boolean) => void;
 }) {
   const [products, setProducts] = useState<TokopediaProduct[]>([]);
   const [searchState, setSearchState] = useState<"idle" | "loading" | "done">(
@@ -116,12 +130,6 @@ function RecommendationCard({
   const isTop = index === 0;
 
   async function handleSearch() {
-    if (searchState === "done") {
-      setSearchState("idle");
-      setProducts([]);
-      return;
-    }
-
     setSearchState("loading");
     try {
       const keywords =
@@ -132,7 +140,7 @@ function RecommendationCard({
           fetch("/api/tokopedia-search", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: kw }),
+            body: JSON.stringify({ query: kw, category: rec.category }),
           })
             .then((r) => r.json())
             .then((d) => (d.products ?? []) as TokopediaProduct[])
@@ -144,18 +152,67 @@ function RecommendationCard({
       const merged: TokopediaProduct[] = [];
       for (const batch of results) {
         for (const p of batch) {
-          const key = p.url ?? p.name;
+          const key = p.productId ?? p.url ?? p.name;
           if (!seen.has(key)) {
             seen.add(key);
             merged.push(p);
           }
         }
       }
-      setProducts(merged.slice(0, 6));
+
+      // Filter produk yang sudah di-wishlist
+      const filtered = merged
+        .filter((p) => !p.productId || !wishlistedIds.has(p.productId))
+        .slice(0, 6);
+
+      setProducts(filtered);
       setSearchState("done");
     } catch {
       setProducts([]);
       setSearchState("idle");
+    }
+  }
+
+  async function handleSearchAgain() {
+    setSearchState("loading");
+    try {
+      const keywords =
+        rec.examples.length > 0 ? rec.examples.slice(0, 3) : [rec.category];
+
+      const results = await Promise.all(
+        keywords.map((kw) =>
+          fetch("/api/tokopedia-search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: kw, category: rec.category }),
+          })
+            .then((r) => r.json())
+            .then((d) => (d.products ?? []) as TokopediaProduct[])
+            .catch(() => [] as TokopediaProduct[]),
+        ),
+      );
+
+      const seen = new Set<string>();
+      const merged: TokopediaProduct[] = [];
+      for (const batch of results) {
+        for (const p of batch) {
+          const key = p.productId ?? p.url ?? p.name;
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(p);
+          }
+        }
+      }
+
+      // Re-filter dengan wishlistedIds terbaru
+      const filtered = merged
+        .filter((p) => !p.productId || !wishlistedIds.has(p.productId))
+        .slice(0, 6);
+
+      setProducts(filtered);
+      setSearchState("done");
+    } catch {
+      setSearchState("done");
     }
   }
 
@@ -174,7 +231,7 @@ function RecommendationCard({
         </div>
       )}
 
-      {/* 3-column grid: badge | content | score+button */}
+      {/* 3-column grid */}
       <div
         className="grid items-start gap-5"
         style={{ gridTemplateColumns: "52px 1fr 200px" }}
@@ -245,7 +302,7 @@ function RecommendationCard({
 
           {/* Search button */}
           <button
-            onClick={handleSearch}
+            onClick={searchState === "done" ? handleSearchAgain : handleSearch}
             disabled={searchState === "loading"}
             className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
           >
@@ -254,16 +311,16 @@ function RecommendationCard({
             ) : (
               <Search size={14} />
             )}
-            {searchState === "done"
-              ? "Tutup"
-              : searchState === "loading"
-                ? "Mencari..."
+            {searchState === "loading"
+              ? "Mencari..."
+              : searchState === "done"
+                ? "Cari Lagi"
                 : "Cari di Tokopedia"}
           </button>
         </div>
       </div>
 
-      {/* Tokopedia results — full width below */}
+      {/* Tokopedia results */}
       {searchState === "done" && products.length > 0 && (
         <div className="mt-5 border-t border-border pt-4">
           <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-teal-700 dark:text-teal-400">
@@ -271,7 +328,12 @@ function RecommendationCard({
           </p>
           <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
             {products.map((p, i) => (
-              <ProductCard key={i} p={p} />
+              <ProductCard
+                key={p.productId ?? i}
+                p={p}
+                wishlistedIds={wishlistedIds}
+                onWishlistChange={onWishlistChange}
+              />
             ))}
           </div>
         </div>
@@ -296,9 +358,11 @@ export default function RecommendationsPage() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "Kamu";
 
+  // Fetch recommendations
   useEffect(() => {
     fetch("/api/recommendations")
       .then((r) => r.json())
@@ -310,6 +374,22 @@ export default function RecommendationsPage() {
       .catch(() => setMessage("Gagal memuat rekomendasi."))
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch wishlist IDs on mount
+  useEffect(() => {
+    fetch("/api/wishlist/ids")
+      .then((r) => r.json())
+      .then((data) => setWishlistedIds(new Set(data.ids ?? [])))
+      .catch(() => {});
+  }, []);
+
+  function handleWishlistChange(id: string, added: boolean) {
+    setWishlistedIds((prev) => {
+      const next = new Set(prev);
+      added ? next.add(id) : next.delete(id);
+      return next;
+    });
+  }
 
   if (loading) {
     return (
@@ -356,7 +436,13 @@ export default function RecommendationsPage() {
       {/* Cards */}
       <div className="flex flex-col gap-4">
         {recommendations.map((rec, i) => (
-          <RecommendationCard key={rec.category} rec={rec} index={i} />
+          <RecommendationCard
+            key={rec.category}
+            rec={rec}
+            index={i}
+            wishlistedIds={wishlistedIds}
+            onWishlistChange={handleWishlistChange}
+          />
         ))}
       </div>
     </div>

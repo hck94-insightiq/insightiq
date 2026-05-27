@@ -1,15 +1,17 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 60;
 
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 const APIFY_ACTOR = "shahidirfan~tokopedia-search-scraper";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 jam
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -20,18 +22,35 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { query } = await req.json();
-  const rawQuery = query.trim();
-  const words = rawQuery.split(/\s+/);
-  const simplifiedQuery =
-    words.length > 4 ? words.slice(0, 4).join(" ") : rawQuery;
-  console.log("Received query:", query);
+  const { query, category } = await req.json();
+
   if (!query || typeof query !== "string" || !query.trim()) {
     return NextResponse.json(
       { error: "Query tidak boleh kosong." },
       { status: 400 },
     );
   }
+
+  const db = await getDb();
+  const userId = new ObjectId(session.user.id);
+  const cacheKey = category ?? query.trim();
+
+  // Cek cache MongoDB
+  const cached = await db.collection("tokopedia_cache").findOne({
+    userId,
+    category: cacheKey,
+    fetchedAt: { $gt: new Date(Date.now() - CACHE_TTL_MS) },
+  });
+
+  if (cached) {
+    return NextResponse.json({ products: cached.products, cached: true });
+  }
+
+  // Cache miss — hit Apify
+  const rawQuery = query.trim();
+  const words = rawQuery.split(/\s+/);
+  const simplifiedQuery =
+    words.length > 4 ? words.slice(0, 4).join(" ") : rawQuery;
 
   let apifyRes: Response;
   try {
@@ -42,7 +61,7 @@ export async function POST(req: NextRequest) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           keyword: simplifiedQuery,
-          results_wanted: 2,
+          results_wanted: 9,
           max_pages: 1,
           proxyConfiguration: { useApifyProxy: false },
         }),
@@ -56,8 +75,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (!apifyRes.ok) {
-    const errText = await apifyRes.text();
-    console.log("Apify status:", apifyRes.status, errText);
     return NextResponse.json(
       { error: "Apify gagal menjalankan scraper." },
       { status: 502 },
@@ -65,7 +82,6 @@ export async function POST(req: NextRequest) {
   }
 
   const raw = await apifyRes.json();
-  console.log(raw);
 
   if (!Array.isArray(raw) || raw.length === 0) {
     return NextResponse.json(
@@ -86,5 +102,14 @@ export async function POST(req: NextRequest) {
     priceNumber: item.price_number,
   }));
 
-  return NextResponse.json({ products });
+  // Simpan ke cache (upsert)
+  await db
+    .collection("tokopedia_cache")
+    .updateOne(
+      { userId, category: cacheKey },
+      { $set: { userId, category: cacheKey, products, fetchedAt: new Date() } },
+      { upsert: true },
+    );
+
+  return NextResponse.json({ products, cached: false });
 }

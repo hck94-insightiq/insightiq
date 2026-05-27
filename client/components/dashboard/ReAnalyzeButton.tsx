@@ -11,17 +11,12 @@ interface Props {
   tiktokUsername: string;
 }
 
-function formatCountdown(resetAt: Date): string {
-  const diff = Math.max(0, new Date(resetAt).getTime() - Date.now());
+function formatCountdown(d: Date): string {
+  const diff = Math.max(0, d.getTime() - Date.now());
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
-  if (h > 0) return `${h}j ${m}m`;
-  return `${m}m ${s}s`;
-}
-
-function getLsKey(userId: string) {
-  return `iq_rl_reset_${userId}`;
+  return h > 0 ? `${h}j ${m}m` : `${m}m ${s}s`;
 }
 
 export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
@@ -31,50 +26,35 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [rateLimitedUntil, setRateLimitedUntil] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState<string>("");
+  const [countdown, setCountdown] = useState("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Helper: set rate limit + persist ke localStorage
+  function getLsKey(id: string) {
+    return `iq_rl_reset_${id}`;
+  }
+
   function applyRateLimit(resetAt: Date) {
     setRateLimitedUntil(resetAt);
-    if (userId) {
-      localStorage.setItem(getLsKey(userId), resetAt.toISOString());
-    }
+    if (userId) localStorage.setItem(getLsKey(userId), resetAt.toISOString());
   }
 
-  // Helper: clear rate limit + hapus dari localStorage
-  function clearRateLimit() {
-    setRateLimitedUntil(null);
-    setCountdown("");
-    if (userId) {
-      localStorage.removeItem(getLsKey(userId));
-    }
-  }
-
-  // On mount — cek localStorage kalau stale/kosong fetch server
+  // On mount — cek localStorage, kalau stale fetch server
   useEffect(() => {
     if (!userId) return;
-
     const stored = localStorage.getItem(getLsKey(userId));
     if (stored) {
-      const storedDate = new Date(stored);
-      if (storedDate > new Date()) {
-        // Masih valid, pakai langsung
-        setRateLimitedUntil(storedDate);
+      const d = new Date(stored);
+      if (d > new Date()) {
+        setRateLimitedUntil(d);
         return;
-      } else {
-        // Sudah expired, hapus
-        localStorage.removeItem(getLsKey(userId));
       }
+      localStorage.removeItem(getLsKey(userId));
     }
-
-    // Fetch dari server
     fetch("/api/analysis/rate-limit")
       .then((r) => r.json())
       .then((data) => {
-        if (data.isLimited && data.resetAt) {
+        if (data.isLimited && data.resetAt)
           applyRateLimit(new Date(data.resetAt));
-        }
       })
       .catch(() => {});
   }, [userId]);
@@ -85,17 +65,16 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
-
     function tick() {
-      const remaining = new Date(rateLimitedUntil!).getTime() - Date.now();
-      if (remaining <= 0) {
-        clearRateLimit();
+      if (new Date(rateLimitedUntil!).getTime() - Date.now() <= 0) {
+        setRateLimitedUntil(null);
+        setCountdown("");
+        if (userId) localStorage.removeItem(getLsKey(userId));
         if (intervalRef.current) clearInterval(intervalRef.current);
       } else {
         setCountdown(formatCountdown(rateLimitedUntil!));
       }
     }
-
     tick();
     intervalRef.current = setInterval(tick, 1000);
     return () => {
@@ -104,7 +83,7 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
   }, [rateLimitedUntil]);
 
   async function handleReanalyze() {
-    // Pre-check rate limit ke server sebelum mulai
+    // Pre-check rate limit sebelum mulai
     try {
       const rlRes = await fetch("/api/analysis/rate-limit");
       const rlData = await rlRes.json();
@@ -114,7 +93,7 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
         return;
       }
     } catch {
-      // Kalau gagal fetch, lanjut saja — server akan handle 429
+      /* lanjut, server handle 429 */
     }
 
     setLoading(true);
@@ -127,7 +106,6 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
       if (!fetchRes.ok) throw new Error("Gagal fetch data TikTok.");
 
       await fetch("/api/analysis", { method: "DELETE" });
-
       const analysisRes = await fetch("/api/analysis", { method: "POST" });
 
       if (analysisRes.status === 429) {
@@ -148,23 +126,21 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
     }
   }
 
-  const isRateLimited = !!rateLimitedUntil;
-  const isDisabled = loading || isRateLimited;
+  const isLimited = !!rateLimitedUntil;
+  const isDisabled = loading || isLimited;
 
   if (variant === "context") {
     return (
       <button
         onClick={handleReanalyze}
         disabled={isDisabled}
-        title={
-          isRateLimited ? `Bisa digunakan lagi dalam ${countdown}` : undefined
-        }
+        title={isLimited ? `Bisa digunakan lagi dalam ${countdown}` : undefined}
         className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-background hover:text-foreground transition-colors disabled:opacity-50"
       >
         <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
         {loading
           ? "Fetching..."
-          : isRateLimited
+          : isLimited
             ? `Re-analyze dalam ${countdown}`
             : "Re-analyze"}
       </button>
@@ -175,15 +151,13 @@ export function ReAnalyzeButton({ variant = "page", tiktokUsername }: Props) {
     <button
       onClick={handleReanalyze}
       disabled={isDisabled}
-      title={
-        isRateLimited ? `Bisa digunakan lagi dalam ${countdown}` : undefined
-      }
+      title={isLimited ? `Bisa digunakan lagi dalam ${countdown}` : undefined}
       className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
     >
       <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
       {loading
         ? "Re-analyzing..."
-        : isRateLimited
+        : isLimited
           ? `Re-analyze dalam ${countdown}`
           : "Re-analyze"}
     </button>

@@ -14,10 +14,16 @@ interface Props {
     shopName: string;
     shopUrl: string;
   };
+  initialWished?: boolean;
+  onToggle?: (wished: boolean) => void;
 }
 
-export function WishlistButton({ product }: Props) {
-  const [wished, setWished] = useState(false);
+export function WishlistButton({
+  product,
+  initialWished = false,
+  onToggle,
+}: Props) {
+  const [wished, setWished] = useState(initialWished);
   const [loading, setLoading] = useState(false);
 
   async function toggleWishlist() {
@@ -30,6 +36,7 @@ export function WishlistButton({ product }: Props) {
           body: JSON.stringify({ productId: product.productId }),
         });
         setWished(false);
+        onToggle?.(false);
       } else {
         await fetch("/api/wishlist", {
           method: "POST",
@@ -37,6 +44,7 @@ export function WishlistButton({ product }: Props) {
           body: JSON.stringify(product),
         });
         setWished(true);
+        onToggle?.(true);
       }
     } catch {
       // silent fail
