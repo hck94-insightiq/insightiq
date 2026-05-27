@@ -91,6 +91,72 @@ export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
 
+  // Rate limit state
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<Date | null>(null);
+  const [rlCountdown, setRlCountdown] = useState("");
+  const rlIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const userId = session?.user?.id ?? "";
+
+  function getLsKey(id: string) {
+    return `iq_rl_reset_${id}`;
+  }
+
+  function applyRateLimit(resetAt: Date) {
+    setRateLimitedUntil(resetAt);
+    if (userId) localStorage.setItem(getLsKey(userId), resetAt.toISOString());
+  }
+
+  // On mount — cek localStorage, kalau stale fetch server
+  useEffect(() => {
+    if (!userId) return;
+    const stored = localStorage.getItem(getLsKey(userId));
+    if (stored) {
+      const d = new Date(stored);
+      if (d > new Date()) {
+        setRateLimitedUntil(d);
+        return;
+      }
+      localStorage.removeItem(getLsKey(userId));
+    }
+    fetch("/api/analysis/rate-limit")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isLimited && data.resetAt)
+          applyRateLimit(new Date(data.resetAt));
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  // Countdown tick
+  useEffect(() => {
+    if (!rateLimitedUntil) {
+      if (rlIntervalRef.current) clearInterval(rlIntervalRef.current);
+      return;
+    }
+    function fmt(d: Date) {
+      const diff = Math.max(0, d.getTime() - Date.now());
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return h > 0 ? `${h}j ${m}m` : `${m}m ${s}s`;
+    }
+    function tick() {
+      if (new Date(rateLimitedUntil!).getTime() - Date.now() <= 0) {
+        setRateLimitedUntil(null);
+        setRlCountdown("");
+        if (userId) localStorage.removeItem(getLsKey(userId));
+        if (rlIntervalRef.current) clearInterval(rlIntervalRef.current);
+      } else {
+        setRlCountdown(fmt(rateLimitedUntil!));
+      }
+    }
+    tick();
+    rlIntervalRef.current = setInterval(tick, 1000);
+    return () => {
+      if (rlIntervalRef.current) clearInterval(rlIntervalRef.current);
+    };
+  }, [rateLimitedUntil]);
+
   const accountRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -250,6 +316,23 @@ export default function SettingsPage() {
 
   async function handleResyncTikTok() {
     if (!tiktokInput.trim()) return;
+
+    // Pre-check rate limit sebelum apapun dijalankan
+    try {
+      const rlRes = await fetch("/api/analysis/rate-limit");
+      const rlData = await rlRes.json();
+      if (rlData.isLimited && rlData.resetAt) {
+        applyRateLimit(new Date(rlData.resetAt));
+        setTiktokFeedback({
+          type: "error",
+          message: "Batas re-analyze harian tercapai (3x/hari).",
+        });
+        return;
+      }
+    } catch {
+      /* lanjut, server handle 429 */
+    }
+
     setTiktokLoading(true);
     setTiktokFeedback(null);
     try {
@@ -262,8 +345,16 @@ export default function SettingsPage() {
       if (!fetchRes.ok)
         throw new Error(fetchData.error || "Gagal fetch data TikTok.");
       setTiktokUsername(tiktokInput);
+
       await fetch("/api/analysis", { method: "DELETE" });
       const analysisRes = await fetch("/api/analysis", { method: "POST" });
+
+      if (analysisRes.status === 429) {
+        const data = await analysisRes.json();
+        applyRateLimit(new Date(data.resetAt));
+        throw new Error("Batas re-analyze harian tercapai (3x/hari).");
+      }
+
       if (!analysisRes.ok) throw new Error("Gagal menjalankan AI analysis.");
       setTiktokFeedback({
         type: "success",
@@ -450,16 +541,23 @@ export default function SettingsPage() {
                   </div>
                   <Button
                     onClick={handleResyncTikTok}
-                    disabled={tiktokLoading || !tiktokInput.trim()}
+                    disabled={
+                      tiktokLoading || !tiktokInput.trim() || !!rateLimitedUntil
+                    }
                     variant="outline"
                     className="h-10 px-4 gap-2 text-sm shrink-0"
+                    title={
+                      rateLimitedUntil
+                        ? `Bisa digunakan lagi dalam ${rlCountdown}`
+                        : undefined
+                    }
                   >
                     {tiktokLoading ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <RefreshCw size={14} />
                     )}
-                    Re-analyze
+                    {rateLimitedUntil ? `dalam ${rlCountdown}` : "Re-analyze"}
                   </Button>
                 </div>
                 {tiktokUsername && (
