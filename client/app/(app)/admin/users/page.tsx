@@ -57,65 +57,69 @@ export default async function AdminUsersPage() {
           <CardTitle>Daftar User</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>TikTok</TableHead>
-                <TableHead>Follower</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Bergabung</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    Belum ada user terdaftar.
-                  </TableCell>
+                  <TableHead>Nama</TableHead>
+                  <TableHead className="hidden sm:table-cell">Email</TableHead>
+                  <TableHead>TikTok</TableHead>
+                  <TableHead>Follower</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    Bergabung
+                  </TableHead>
                 </TableRow>
-              ) : (
-                users.map((u) => (
-                  <TableRow key={u._id.toString()}>
-                    <TableCell className="font-medium text-foreground">
-                      {u.name}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {u.email}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {u.tiktok}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {u.followers > 0
-                        ? u.followers.toLocaleString("id-ID")
-                        : u.followers}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={u.role === "admin" ? "default" : "secondary"}
-                      >
-                        {u.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {u.createdAt
-                        ? new Date(u.createdAt).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "-"}
+              </TableHeader>
+              <TableBody>
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      Belum ada user terdaftar.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  users.map((u) => (
+                    <TableRow key={u._id.toString()}>
+                      <TableCell className="font-medium text-foreground">
+                        {u.name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">
+                        {u.email}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {u.tiktok}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {u.followers > 0
+                          ? u.followers.toLocaleString("id-ID")
+                          : u.followers}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={u.role === "admin" ? "default" : "secondary"}
+                        >
+                          {u.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">
+                        {u.createdAt
+                          ? new Date(u.createdAt).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            })
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

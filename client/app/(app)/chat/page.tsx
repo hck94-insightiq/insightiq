@@ -187,14 +187,14 @@ function ChatPageInner() {
   const showSuggestions = messages.length <= 1 && !typing;
 
   return (
-    <div className="flex h-[calc(100vh-140px)] flex-col -mb-16">
+    <div className="flex h-[calc(100dvh-11rem)] md:h-[calc(100vh-140px)] flex-col md:-mb-16">
       <Suspense>
         <PromptReader onRead={handlePromptFromQuery} />
       </Suspense>
 
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
         {/* Context banner */}
-        <div className="flex items-center gap-2.5 border-b border-border bg-teal-500/5 px-5 py-3">
+        <div className="flex items-center gap-2 border-b border-border bg-teal-500/5 px-3 py-2.5 sm:gap-2.5 sm:px-5 sm:py-3">
           <Sparkles
             size={14}
             className="shrink-0 text-teal-600 dark:text-teal-400"
@@ -233,7 +233,7 @@ function ChatPageInner() {
         {/* Messages */}
         <div
           ref={messagesRef}
-          className="flex-1 min-h-0 space-y-4 overflow-y-auto px-5 py-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
         >
           {messages.map((m, i) => (
             <div
@@ -296,9 +296,9 @@ function ChatPageInner() {
         </div>
 
         {/* Input bar */}
-        <div className="border-t border-border px-5 pb-5 pt-4">
-          <div className="flex items-end gap-2.5">
-            <div className="flex-1 overflow-hidden rounded-xl border border-border bg-background px-4 py-3 focus-within:border-teal-500/60 transition-colors">
+        <div className="border-t border-border px-3 pb-3 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+          <div className="flex items-end gap-2">
+            <div className="flex-1 overflow-hidden rounded-xl border border-border bg-background px-3 py-2.5 sm:px-4 sm:py-3 focus-within:border-teal-500/60 transition-colors">
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -307,7 +307,7 @@ function ChatPageInner() {
                 onKeyDown={handleKeyDown}
                 placeholder="Tanya apa pun tentang strategi affiliate kamu…"
                 disabled={typing}
-                className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 max-h-[160px] overflow-y-auto"
+                className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 max-h-[120px] overflow-y-auto"
                 onInput={(e) => {
                   const el = e.target as HTMLTextAreaElement;
                   el.style.height = "auto";
@@ -318,14 +318,17 @@ function ChatPageInner() {
             <button
               onClick={() => send()}
               disabled={!input.trim() || typing}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500 text-white transition-colors hover:bg-teal-400 disabled:opacity-40"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500 text-white transition-colors hover:bg-teal-400 disabled:opacity-40"
             >
-              <Send size={16} />
+              <Send size={15} />
             </button>
           </div>
-          <p className="mt-2.5 text-center font-mono text-[10px] text-muted-foreground">
-            Enter untuk kirim · Shift+Enter untuk baris baru · AI bisa membuat
-            kesalahan, verifikasi info penting
+          {/* Hint — simplified on mobile */}
+          <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
+            <span className="hidden sm:inline">
+              Enter untuk kirim · Shift+Enter untuk baris baru ·{" "}
+            </span>
+            AI bisa membuat kesalahan, verifikasi info penting
           </p>
         </div>
       </div>

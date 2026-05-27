@@ -53,16 +53,9 @@ export default function AudienceDonut({ account }: Props) {
             Data belum tersedia
           </div>
         ) : (
-          <div
-            className="grid items-center gap-5"
-            style={{
-              height: 260,
-              minHeight: 0,
-              gridTemplateColumns: "1fr minmax(0,1fr)",
-            }}
-          >
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-5">
             {/* Donut */}
-            <div className="relative h-full">
+            <div className="relative h-[200px] md:h-[230px] flex-1 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -100,7 +93,6 @@ export default function AudienceDonut({ account }: Props) {
               </ResponsiveContainer>
               {/* Center label */}
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center z-0">
-                {" "}
                 <p className="font-mono text-2xl font-semibold tracking-tight">
                   {primaryPct}%
                 </p>
@@ -110,7 +102,8 @@ export default function AudienceDonut({ account }: Props) {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            {/* Legend — horizontal wrap on mobile, vertical on md+ */}
+            <div className="flex flex-row flex-wrap justify-center gap-x-4 gap-y-2 md:flex-col md:gap-2.5 md:flex-none">
               {chartData.map((d, i) => {
                 const pct =
                   total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
@@ -123,9 +116,7 @@ export default function AudienceDonut({ account }: Props) {
                       className="h-2.5 w-2.5 shrink-0 rounded-sm"
                       style={{ background: DONUT_COLORS[i] }}
                     />
-                    <span className="flex-1 truncate text-muted-foreground">
-                      {d.name}
-                    </span>
+                    <span className="text-muted-foreground">{d.name}</span>
                     <span className="font-mono font-semibold">{pct}%</span>
                   </div>
                 );

@@ -34,7 +34,7 @@ export default function Sidebar() {
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
   return (
-    <aside className="fixed left-0 top-0 flex h-screen w-56 flex-col border-r border-border bg-muted/40 px-3 py-5">
+    <aside className="fixed left-0 top-0 hidden md:flex h-screen w-56 flex-col border-r border-border bg-muted/40 px-3 py-5">
       {/* Logo */}
       <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
         <span className="relative flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-mono text-sm font-semibold text-background">

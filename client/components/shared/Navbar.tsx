@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Settings, LogOut } from "lucide-react";
+import { Moon, Sun, Settings, LogOut, ShieldCheck } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import {
@@ -35,12 +35,10 @@ const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
 };
 
 function getPageTitle(pathname: string) {
-  if (pathname.startsWith("/analysis"))
-    return PAGE_TITLES["/analysis"];
+  if (pathname.startsWith("/analysis")) return PAGE_TITLES["/analysis"];
   if (pathname.startsWith("/recommendations"))
     return PAGE_TITLES["/recommendations"];
-  if (pathname.startsWith("/chat"))
-    return PAGE_TITLES["/chat"];
+  if (pathname.startsWith("/chat")) return PAGE_TITLES["/chat"];
   if (pathname.startsWith("/settings")) return PAGE_TITLES["/settings"];
   if (pathname.startsWith("/admin")) return PAGE_TITLES["/admin"];
   if (pathname.startsWith("/wishlist")) return PAGE_TITLES["/wishlist"];
@@ -67,7 +65,7 @@ export default function Navbar() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <header className="fixed left-56 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-8 backdrop-blur">
+    <header className="fixed left-0 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 md:left-56 md:px-8 backdrop-blur">
       {/* Page title */}
       <div className="flex flex-col gap-0.5">
         {sublabel && (
@@ -128,6 +126,21 @@ export default function Navbar() {
                   Settings
                 </Link>
               </DropdownMenuItem>
+              {/* Admin link — only visible to admin role */}
+              {(session.user as any)?.role === "admin" && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/admin"
+                      className="cursor-pointer flex items-center gap-2"
+                    >
+                      <ShieldCheck size={15} />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => signOut({ callbackUrl: "/" })}

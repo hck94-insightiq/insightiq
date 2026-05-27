@@ -33,8 +33,8 @@ export default function ProductMatchChart({ recommendations }: Props) {
             {data.map((r, i) => (
               <div
                 key={r.category}
-                className="grid items-center gap-3"
-                style={{ gridTemplateColumns: "minmax(140px, 220px) 1fr 44px" }}
+                className="flex flex-col gap-1 sm:grid sm:items-center sm:gap-3"
+                style={{ gridTemplateColumns: "minmax(120px, 200px) 1fr 40px" }}
               >
                 <p
                   className="truncate text-sm text-foreground/85"
@@ -42,19 +42,24 @@ export default function ProductMatchChart({ recommendations }: Props) {
                 >
                   {r.category}
                 </p>
-                <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full transition-[width] duration-700 ease-out"
-                    style={{
-                      width: `${r.matchScore}%`,
-                      background:
-                        i === 0
-                          ? TEAL
-                          : tealAlpha(Math.max(0.35, r.matchScore / 100)),
-                    }}
-                  />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="relative flex-1 h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full transition-[width] duration-700 ease-out"
+                      style={{
+                        width: `${r.matchScore}%`,
+                        background:
+                          i === 0
+                            ? TEAL
+                            : tealAlpha(Math.max(0.35, r.matchScore / 100)),
+                      }}
+                    />
+                  </div>
+                  <span className="sm:hidden font-mono text-sm font-semibold w-8 text-right shrink-0">
+                    {r.matchScore}
+                  </span>
                 </div>
-                <span className="text-right font-mono text-sm font-semibold">
+                <span className="hidden sm:block text-right font-mono text-sm font-semibold">
                   {r.matchScore}
                 </span>
               </div>
