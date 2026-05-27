@@ -116,6 +116,14 @@ export default function ChatPage() {
     }
   }, [searchParams]);
 
+  // Auto-resize textarea whenever input changes (e.g. pre-filled from wishlist)
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [input]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     if (messagesRef.current) {
@@ -252,7 +260,9 @@ export default function ChatPage() {
                 {m.role === "assistant" ? (
                   <Markdown text={m.content} />
                 ) : (
-                  <p className="text-[14px] leading-relaxed">{m.content}</p>
+                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
+                    {m.content}
+                  </p>
                 )}
               </div>
             </div>
@@ -304,8 +314,8 @@ export default function ChatPage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Tanya apa pun tentang strategi affiliate kamu…"
                 disabled={typing}
-                className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-                style={{ maxHeight: 120, overflowY: "auto" }}
+                className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 max-h-[160px] overflow-y-auto"
+                style={{}}
                 onInput={(e) => {
                   const el = e.target as HTMLTextAreaElement;
                   el.style.height = "auto";
