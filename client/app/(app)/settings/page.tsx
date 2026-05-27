@@ -196,7 +196,6 @@ export default function SettingsPage() {
 
   const [tgConnected, setTgConnected] = useState(false);
   const [tgNotifEnabled, setTgNotifEnabled] = useState(false);
-  const [tgNotifHour, setTgNotifHour] = useState(5);
   const [tgVerifyCode, setTgVerifyCode] = useState<string | null>(null);
   const [tgBotUsername, setTgBotUsername] = useState("InsightIQ_Bot");
   const [tgCodeCopied, setTgCodeCopied] = useState(false);
@@ -240,7 +239,6 @@ export default function SettingsPage() {
       .then((data) => {
         setTgConnected(data.connected ?? false);
         setTgNotifEnabled(data.notificationEnabled ?? false);
-        setTgNotifHour(data.notificationHour ?? 5);
       })
       .catch(() => {});
   }, []);
@@ -394,7 +392,6 @@ export default function SettingsPage() {
       const data = await res.json();
       setTgConnected(data.connected ?? false);
       setTgNotifEnabled(data.notificationEnabled ?? false);
-      setTgNotifHour(data.notificationHour ?? 5);
       if (data.connected) {
         setTgVerifyCode(null);
         setTgFeedback({
@@ -424,15 +421,6 @@ export default function SettingsPage() {
     });
   }
 
-  async function handleTgHourChange(hour: number) {
-    setTgNotifHour(hour);
-    await fetch("/api/telegram/status", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notificationHour: hour }),
-    });
-  }
-
   async function handleTgTest() {
     setTgTestLoading(true);
     setTgFeedback(null);
@@ -458,7 +446,10 @@ export default function SettingsPage() {
       const res = await fetch("/api/telegram/force-send", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal kirim notifikasi.");
-      setTgFeedback({ type: "success", message: "Notifikasi rekomendasi produk berhasil dikirim!" });
+      setTgFeedback({
+        type: "success",
+        message: "Notifikasi rekomendasi produk berhasil dikirim!",
+      });
     } catch (err: any) {
       setTgFeedback({ type: "error", message: err.message });
     } finally {
@@ -831,24 +822,13 @@ export default function SettingsPage() {
                   </div>
 
                   {tgNotifEnabled && (
-                    <div className="space-y-1.5">
-                      <label className="text-sm text-muted-foreground">
-                        Jam Notifikasi (WIB)
-                      </label>
-                      <select
-                        value={tgNotifHour}
-                        onChange={(e) =>
-                          handleTgHourChange(Number(e.target.value))
-                        }
-                        className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      >
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <option key={i} value={i}>
-                            {String(i).padStart(2, "0")}:00 WIB
-                            {i === 5 ? " (default)" : ""}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                      <p className="text-sm text-muted-foreground">
+                        Notifikasi dikirim setiap hari pukul{" "}
+                        <span className="font-semibold text-foreground">
+                          05.00 WIB
+                        </span>
+                      </p>
                     </div>
                   )}
                 </div>
