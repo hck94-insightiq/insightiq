@@ -77,7 +77,7 @@ export default async function DashboardPage({
           </span>
         </h1>
         <Link
-          href="/dashboard/analysis"
+          href="/analysis"
           className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 text-sm font-medium hover:bg-muted transition-colors"
         >
           <Sparkles size={14} />
@@ -88,8 +88,16 @@ export default async function DashboardPage({
       {/* Context strip */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-muted/40 px-5 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-teal-700 text-xs font-semibold text-white">
-            {getInitials(serializedAccount.tiktokUsername)}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-700 text-xs font-semibold text-white">
+            {serializedAccount.avatarUrl ? (
+              <img
+                src={serializedAccount.avatarUrl}
+                alt={serializedAccount.tiktokUsername}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              getInitials(serializedAccount.tiktokUsername)
+            )}
           </div>
           <div>
             <p className="text-sm font-semibold leading-tight">
@@ -125,7 +133,7 @@ export default async function DashboardPage({
           title="AI Analysis Belum Tersedia"
           description="Klik tombol di bawah untuk menjalankan analisis AI berdasarkan data akun yang sudah kamu input."
           ctaLabel="Jalankan AI Analysis"
-          ctaHref="/dashboard/analysis"
+          ctaHref="/analysis"
         />
       )}
 
@@ -177,7 +185,7 @@ export default async function DashboardPage({
                 </p>
               </div>
               <Link
-                href="/dashboard/chat"
+                href="/chat"
                 className="inline-flex h-10 shrink-0 items-center gap-2 self-start rounded-lg bg-teal-500 px-4 text-sm font-semibold text-white hover:bg-teal-400 transition-colors lg:self-auto"
               >
                 <MessageSquare size={15} />

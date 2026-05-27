@@ -39,6 +39,7 @@ export interface Account {
   _id: string;
   userId: string;
   tiktokUsername: string;
+  avatarUrl: string | null;
   nickName: string;
   contentDescription: string;
   followers: number;

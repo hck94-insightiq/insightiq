@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/analysis", label: "AI Analysis", icon: Sparkles },
+  { href: "/analysis", label: "AI Analysis", icon: Sparkles },
   { href: "/recommendations", label: "Recommendations", icon: ShoppingBag },
   { href: "/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/dashboard/chat", label: "AI Consultant", icon: MessageSquare },
+  { href: "/chat", label: "AI Consultant", icon: MessageSquare },
 ];
 const adminItems = [
   { href: "/admin", label: "Overview", icon: ShieldCheck },

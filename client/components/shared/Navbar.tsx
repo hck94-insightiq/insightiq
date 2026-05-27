@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 
 const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
   "/dashboard": { label: "Overview", sublabel: "DASHBOARD" },
-  "/dashboard/analysis": {
+  "/analysis": {
     label: "Analysis reports and insights",
     sublabel: "AI ANALYSIS",
   },
@@ -24,7 +24,7 @@ const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
     label: "Top products based on your niche",
     sublabel: "RECOMMENDATIONS",
   },
-  "/dashboard/chat": {
+  "/chat": {
     label: "Chat with your AI consultant",
     sublabel: "AI CONSULTANT",
   },
@@ -35,12 +35,12 @@ const PAGE_TITLES: Record<string, { label: string; sublabel: string }> = {
 };
 
 function getPageTitle(pathname: string) {
-  if (pathname.startsWith("/dashboard/analysis"))
-    return PAGE_TITLES["/dashboard/analysis"];
+  if (pathname.startsWith("/analysis"))
+    return PAGE_TITLES["/analysis"];
   if (pathname.startsWith("/recommendations"))
     return PAGE_TITLES["/recommendations"];
-  if (pathname.startsWith("/dashboard/chat"))
-    return PAGE_TITLES["/dashboard/chat"];
+  if (pathname.startsWith("/chat"))
+    return PAGE_TITLES["/chat"];
   if (pathname.startsWith("/settings")) return PAGE_TITLES["/settings"];
   if (pathname.startsWith("/admin")) return PAGE_TITLES["/admin"];
   if (pathname.startsWith("/wishlist")) return PAGE_TITLES["/wishlist"];

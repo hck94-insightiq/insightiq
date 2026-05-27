@@ -94,7 +94,7 @@ export default function EngagementChart({ account }: Props) {
                   "Avg per video",
                 ]}
               />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={100} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={200} />
             </BarChart>
           </ResponsiveContainer>
         </div>

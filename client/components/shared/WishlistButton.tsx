@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
+import { toast } from "sonner";
 
 interface Props {
   product: {
@@ -37,6 +38,7 @@ export function WishlistButton({
         });
         setWished(false);
         onToggle?.(false);
+        toast.success("Dihapus dari wishlist.");
       } else {
         await fetch("/api/wishlist", {
           method: "POST",
@@ -45,9 +47,12 @@ export function WishlistButton({
         });
         setWished(true);
         onToggle?.(true);
+        toast.success(
+          `${product.title.slice(0, 40)}${product.title.length > 40 ? "..." : ""} ditambahkan ke wishlist!`,
+        );
       }
     } catch {
-      // silent fail
+      toast.error("Gagal memperbarui wishlist.");
     } finally {
       setLoading(false);
     }
