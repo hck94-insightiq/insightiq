@@ -467,6 +467,7 @@ export function AIAnalysisWheel({
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
       {/* Wheel */}
       <div className="relative shrink-0" style={{ width: 220, height: 220 }}>
+        {/* 1. SVG murni untuk Chart Donut saja */}
         <svg width="220" height="220" viewBox="0 0 220 220">
           {SECTIONS.map((s) => {
             const isSelected = selected === s.id;
@@ -483,71 +484,41 @@ export function AIAnalysisWheel({
               />
             );
           })}
-          <circle
-            cx={CX}
-            cy={CY}
-            r={RI - 2}
-            fill="var(--color-background-secondary, #111)"
-            className="pointer-events-none"
-          />
+        </svg>
+
+        {/* 2. HTML Overlay untuk Lingkaran Tengah (Perfect Center, Adaptive Light/Dark, Bold) */}
+        <div
+          className="absolute inset-0 m-auto flex flex-col items-center justify-center rounded-full bg-white dark:bg-[#111] shadow-md dark:shadow-none pointer-events-none transition-colors"
+          style={{ width: (RI - 2) * 2, height: (RI - 2) * 2 }}
+        >
           {selectedSection ? (
             <>
-              <text
-                x={CX}
-                y={CY - 4}
-                textAnchor="middle"
-                style={{
-                  fontSize: 8,
-                  fontFamily: "var(--font-mono, monospace)",
-                  fill: selectedSection.color,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
+              <span
+                className="font-mono text-[10px] font-extrabold uppercase tracking-widest leading-none"
+                style={{ color: selectedSection.color }}
               >
                 {selectedSection.label.split(" ")[0]}
-              </text>
-              <text
-                x={CX}
-                y={CY + 7}
-                textAnchor="middle"
-                style={{
-                  fontSize: 8,
-                  fontFamily: "var(--font-mono, monospace)",
-                  fill: selectedSection.color,
-                }}
-              >
-                {selectedSection.label.split(" ").slice(1).join(" ")}
-              </text>
+              </span>
+              {/* Render baris kedua HANYA jika memang ada lebih dari 1 kata */}
+              {selectedSection.label.split(" ").length > 1 && (
+                <span
+                  className="font-mono text-[8px] font-semibold leading-none mt-1"
+                  style={{ color: selectedSection.color }}
+                >
+                  {selectedSection.label.split(" ").slice(1).join(" ")}
+                </span>
+              )}
             </>
           ) : (
-            <>
-              <text
-                x={CX}
-                y={CY - 4}
-                textAnchor="middle"
-                style={{
-                  fontSize: 9,
-                  fontFamily: "var(--font-mono, monospace)",
-                  fill: "var(--muted-foreground, #888)",
-                }}
-              >
-                KLIK
-              </text>
-              <text
-                x={CX}
-                y={CY + 7}
-                textAnchor="middle"
-                style={{
-                  fontSize: 9,
-                  fontFamily: "var(--font-mono, monospace)",
-                  fill: "var(--muted-foreground, #888)",
-                }}
-              >
-                SECTION
-              </text>
-            </>
+            <span className="font-mono text-[9px] font-semibold text-muted-foreground text-center leading-tight">
+              KLIK
+              <br />
+              SECTION
+            </span>
           )}
-        </svg>
+        </div>
+
+        {/* 3. Overlay Icon di atas Section */}
         {SECTIONS.map((s) => {
           const c = centroid(CX, CY, (RI + RO) / 2, s.a1, s.a2);
           const isSelected = selected === s.id;
@@ -560,19 +531,21 @@ export function AIAnalysisWheel({
             >
               <Icon
                 size={18}
-                style={{ color: isSelected ? "#fff" : s.color }}
-                strokeWidth={2}
+                // Hapus inline style color, gunakan Tailwind agar adaptif Light/Dark mode
+                className={`transition-all duration-200 ${
+                  isSelected
+                    ? "text-white drop-shadow-sm"
+                    : "text-teal-950/40 dark:text-white/40"
+                }`}
+                // Bikin icon sedikit lebih tebal saat dipilih
+                strokeWidth={isSelected ? 2.5 : 2}
               />
               <span
-                style={{
-                  fontSize: 8,
-                  fontFamily: "var(--font-mono, monospace)",
-                  color: isSelected ? "#fff" : s.color,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                }}
+                className={`font-mono text-[8px] uppercase tracking-[0.04em] whitespace-nowrap transition-all duration-200 ${
+                  isSelected
+                    ? "text-white font-bold drop-shadow-sm"
+                    : "text-teal-950/50 dark:text-white/40 font-semibold"
+                }`}
               >
                 {s.label.split(" ")[0]}
               </span>
@@ -581,7 +554,7 @@ export function AIAnalysisWheel({
         })}
       </div>
 
-      {/* Detail panel */}
+      {/* Detail panel (Tetap sama) */}
       <div className="flex-1 min-w-0">
         {!selected ? (
           <div className="flex h-[400px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border">
@@ -613,7 +586,7 @@ export function AIAnalysisWheel({
                 </p>
               </div>
             </div>
-            {/* Content — flex-1 fills remaining height */}
+            {/* Content */}
             <div className="flex-1 min-h-0">{detailContent[selected]}</div>
           </div>
         )}

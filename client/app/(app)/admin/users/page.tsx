@@ -45,15 +45,15 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Users</h1>
+        <p className="text-muted-foreground mt-1">
           Total {users.length} user terdaftar
         </p>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center gap-2">
-          <Users className="h-5 w-5 text-blue-600" />
+          <Users className="h-5 w-5 text-teal-500" />
           <CardTitle>Daftar User</CardTitle>
         </CardHeader>
         <CardContent>
@@ -73,7 +73,7 @@ export default async function AdminUsersPage() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center text-gray-400 py-8"
+                    className="text-center text-muted-foreground py-8"
                   >
                     Belum ada user terdaftar.
                   </TableCell>
@@ -81,11 +81,19 @@ export default async function AdminUsersPage() {
               ) : (
                 users.map((u) => (
                   <TableRow key={u._id.toString()}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
-                    <TableCell className="text-gray-600">{u.email}</TableCell>
-                    <TableCell className="text-gray-600">{u.tiktok}</TableCell>
-                    <TableCell className="text-gray-600">
-                      {u.followers}
+                    <TableCell className="font-medium text-foreground">
+                      {u.name}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {u.email}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {u.tiktok}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {u.followers > 0
+                        ? u.followers.toLocaleString("id-ID")
+                        : u.followers}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -94,7 +102,7 @@ export default async function AdminUsersPage() {
                         {u.role}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="text-muted-foreground">
                       {u.createdAt
                         ? new Date(u.createdAt).toLocaleDateString("id-ID", {
                             day: "numeric",
