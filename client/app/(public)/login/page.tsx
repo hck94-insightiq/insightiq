@@ -1,9 +1,9 @@
 "use client";
 
 import { type LoginInput, loginSchema } from "@/lib/validators";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Suspense } from "react";
+
+function RegisteredToast() {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      toast.success("Registrasi berhasil! Silakan login.");
+    }
+  }, []);
+  return null;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,6 +55,9 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
+      <Suspense>
+        <RegisteredToast />
+      </Suspense>
       {/* Mobile logo — hanya muncul di layar kecil */}
       <div className="flex items-center gap-2 mb-6 lg:hidden">
         <div className="w-7 h-7 rounded-lg bg-teal-500 flex items-center justify-center">
@@ -55,7 +70,9 @@ export default function LoginPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-white text-2xl font-bold">Selamat datang kembali</h1>
+        <h1 className="text-white text-2xl font-bold">
+          Selamat datang kembali
+        </h1>
         <p className="text-white/40 text-sm mt-1">
           Masuk untuk melihat insight akun TikTok kamu
         </p>
