@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   const greeting = firstName ? `, ${firstName}` : "";
   await sendMessage(
     String(chatId),
-    `✅ *Berhasil${greeting}!*\n\nAkun InsightIQ kamu (*${user.name}*) sudah terhubung ke Telegram.\n\nKamu akan mendapat rekomendasi produk harian setiap hari sesuai jadwal yang kamu set di Settings. 🎉\n\nSelamat jualan! 🚀`
+    `✅ <b>Berhasil${greeting}!</b>\n\nAkun InsightIQ kamu (<b>${user.name}</b>) sudah terhubung ke Telegram.\n\nKamu akan mendapat rekomendasi produk harian setiap hari sesuai jadwal yang kamu set di Settings. 🎉\n\nSelamat jualan! 🚀`
   );
 
   return NextResponse.json({ success: true, userName: user.name });

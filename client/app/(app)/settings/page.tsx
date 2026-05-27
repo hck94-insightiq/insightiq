@@ -203,6 +203,7 @@ export default function SettingsPage() {
   const [tgLoading, setTgLoading] = useState(false);
   const [tgCheckLoading, setTgCheckLoading] = useState(false);
   const [tgTestLoading, setTgTestLoading] = useState(false);
+  const [tgForceSendLoading, setTgForceSendLoading] = useState(false);
   const [tgDisconnectLoading, setTgDisconnectLoading] = useState(false);
   const [tgFeedback, setTgFeedback] = useState<{
     type: "success" | "error";
@@ -447,6 +448,21 @@ export default function SettingsPage() {
       setTgFeedback({ type: "error", message: err.message });
     } finally {
       setTgTestLoading(false);
+    }
+  }
+
+  async function handleTgForceSend() {
+    setTgForceSendLoading(true);
+    setTgFeedback(null);
+    try {
+      const res = await fetch("/api/telegram/force-send", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal kirim notifikasi.");
+      setTgFeedback({ type: "success", message: "Notifikasi rekomendasi produk berhasil dikirim!" });
+    } catch (err: any) {
+      setTgFeedback({ type: "error", message: err.message });
+    } finally {
+      setTgForceSendLoading(false);
     }
   }
 
@@ -841,7 +857,7 @@ export default function SettingsPage() {
                   <Alert type={tgFeedback.type} message={tgFeedback.message} />
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     onClick={handleTgTest}
                     disabled={tgTestLoading}
@@ -854,6 +870,18 @@ export default function SettingsPage() {
                       <Send size={13} />
                     )}
                     Kirim Pesan Tes
+                  </Button>
+                  <Button
+                    onClick={handleTgForceSend}
+                    disabled={tgForceSendLoading}
+                    className="h-9 px-4 text-sm gap-2 bg-teal-500 hover:bg-teal-400 text-white"
+                  >
+                    {tgForceSendLoading ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <Bell size={13} />
+                    )}
+                    Kirim Notifikasi Sekarang
                   </Button>
                   <Button
                     onClick={handleTgDisconnect}
