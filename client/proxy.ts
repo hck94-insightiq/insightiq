@@ -31,5 +31,10 @@ export const config = {
     "/onboarding",
     "/dashboard/:path*",
     "/admin/:path*",
+    "/analysis",
+    "/chat",
+    "/recommendations",
+    "/wishlist",
+    "/settings",
   ],
 };

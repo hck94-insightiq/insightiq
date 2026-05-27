@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Send, Sparkles, RotateCcw } from "lucide-react";
 
@@ -21,8 +21,6 @@ const SUGGESTIONS = [
   "Hashtag apa yang sebaiknya aku pakai?",
   "Gimana caranya naikkin engagement rate aku?",
 ];
-
-// ─── Simple markdown renderer ─────────────────────────────────────────────────
 
 function Markdown({ text }: { text: string }) {
   const lines = text.split("\n");
@@ -49,8 +47,6 @@ function Markdown({ text }: { text: string }) {
   );
 }
 
-// ─── Typing dots ──────────────────────────────────────────────────────────────
-
 function TypingDots() {
   return (
     <div className="flex items-center gap-1.5 px-4 py-3.5">
@@ -61,8 +57,6 @@ function TypingDots() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 function makeInitialMessage(username?: string): Message {
   return {
     role: "assistant",
@@ -72,8 +66,16 @@ function makeInitialMessage(username?: string): Message {
   };
 }
 
-export default function ChatPage() {
+// Inner component yang pakai useSearchParams — dibungkus Suspense
+function PromptReader({ onRead }: { onRead: (prompt: string | null) => void }) {
   const searchParams = useSearchParams();
+  useEffect(() => {
+    onRead(searchParams.get("prompt"));
+  }, []);
+  return null;
+}
+
+function ChatPageInner() {
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -82,7 +84,6 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef(false);
 
-  // Fetch account + set initial message
   useEffect(() => {
     fetch("/api/account")
       .then((r) => r.json())
@@ -103,20 +104,6 @@ export default function ChatPage() {
       });
   }, []);
 
-  // Pre-fill prompt from query string (e.g. from wishlist)
-  useEffect(() => {
-    const promptFromQuery = searchParams.get("prompt");
-    if (promptFromQuery) {
-      setInput(decodeURIComponent(promptFromQuery));
-      setTimeout(() => {
-        textareaRef.current?.focus();
-        const len = decodeURIComponent(promptFromQuery).length;
-        textareaRef.current?.setSelectionRange(len, len);
-      }, 100);
-    }
-  }, [searchParams]);
-
-  // Auto-resize textarea whenever input changes (e.g. pre-filled from wishlist)
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -124,12 +111,22 @@ export default function ChatPage() {
     el.style.height = el.scrollHeight + "px";
   }, [input]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages, typing]);
+
+  function handlePromptFromQuery(prompt: string | null) {
+    if (prompt) {
+      const decoded = decodeURIComponent(prompt);
+      setInput(decoded);
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        textareaRef.current?.setSelectionRange(decoded.length, decoded.length);
+      }, 100);
+    }
+  }
 
   const send = useCallback(
     async (text?: string) => {
@@ -143,7 +140,6 @@ export default function ChatPage() {
       setInput("");
       setTyping(true);
 
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
@@ -162,13 +158,10 @@ export default function ChatPage() {
           ...prev,
           { role: "assistant", content: data.message },
         ]);
-      } catch (err: any) {
+      } catch {
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            content: "Maaf, terjadi kesalahan. Coba lagi.",
-          },
+          { role: "assistant", content: "Maaf, terjadi kesalahan. Coba lagi." },
         ]);
       } finally {
         setTyping(false);
@@ -195,7 +188,10 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-140px)] flex-col -mb-16">
-      {/* Chat card */}
+      <Suspense>
+        <PromptReader onRead={handlePromptFromQuery} />
+      </Suspense>
+
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card">
         {/* Context banner */}
         <div className="flex items-center gap-2.5 border-b border-border bg-teal-500/5 px-5 py-3">
@@ -238,7 +234,6 @@ export default function ChatPage() {
         <div
           ref={messagesRef}
           className="flex-1 min-h-0 space-y-4 overflow-y-auto px-5 py-5 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border"
-          style={{ minHeight: 0 }}
         >
           {messages.map((m, i) => (
             <div
@@ -268,7 +263,6 @@ export default function ChatPage() {
             </div>
           ))}
 
-          {/* Typing indicator */}
           {typing && (
             <div className="flex justify-start">
               <div className="mr-2.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-500 text-white">
@@ -280,7 +274,6 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Suggested prompts */}
           {showSuggestions && (
             <div className="pt-2">
               <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
@@ -315,7 +308,6 @@ export default function ChatPage() {
                 placeholder="Tanya apa pun tentang strategi affiliate kamu…"
                 disabled={typing}
                 className="w-full resize-none bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 max-h-[160px] overflow-y-auto"
-                style={{}}
                 onInput={(e) => {
                   const el = e.target as HTMLTextAreaElement;
                   el.style.height = "auto";
@@ -338,5 +330,13 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense>
+      <ChatPageInner />
+    </Suspense>
   );
 }
