@@ -98,10 +98,10 @@ export default function KpiCards({ account, analysis }: Props) {
           return (
             <div
               key={label}
-              className="relative overflow-hidden rounded-xl bg-foreground p-5 text-background"
+              className="relative overflow-hidden rounded-xl bg-foreground dark:bg-teal-500/[0.04] dark:border dark:border-teal-500/40 p-5 text-background dark:text-foreground"
             >
               <div className="flex items-start justify-between">
-                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-background/55">
+                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-background/55 dark:text-muted-foreground">
                   {label}
                 </span>
                 <Icon size={14} className="text-teal-400" />

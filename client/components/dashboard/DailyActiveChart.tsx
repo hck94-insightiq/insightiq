@@ -19,35 +19,30 @@ interface DayData {
 
 interface Props {
   data: DayData[];
-  growth: number;
+  avgPerDay: number;
 }
 
-export default function DailyActiveChart({ data, growth }: Props) {
+export default function DailyActiveChart({ data, avgPerDay }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const growthLabel =
-    growth > 0 ? `↑ ${growth}%` : growth < 0 ? `↓ ${Math.abs(growth)}%` : "—";
-  const growthClass =
-    growth >= 0
-      ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
-      : "bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20";
+  const avgLabel = `~${avgPerDay}/hari`;
+  const avgClass =
+    "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20 font-semibold";
 
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-base font-semibold">
-            Daily Active Users · 30 hari
+            Registrasi User · 30 Hari
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Kreator yang menjalankan analisis
+            User baru yang bergabung per hari
           </p>
         </div>
-        <span
-          className={`text-xs border px-2 py-1 rounded-full ${growthClass}`}
-        >
-          {growthLabel}
+        <span className={`text-xs border px-2 py-1 rounded-full ${avgClass}`}>
+          {avgLabel}
         </span>
       </CardHeader>
       <CardContent>

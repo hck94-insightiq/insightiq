@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/mongodb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BarChart3, Activity, Brain } from "lucide-react";
+import { Users, BarChart3, Activity, Brain, Heart } from "lucide-react";
 import Link from "next/link";
 import DailyActiveChart from "@/components/dashboard/DailyActiveChart";
 
@@ -27,64 +27,78 @@ interface DailyActiveItem {
 
 async function getDailyActive(): Promise<{
   data: { day: string; users: number }[];
-  growth: number;
+  avgPerDay: number;
 }> {
   const db = await getDb();
 
+  // Gunakan registrasi user per hari — data ini tidak pernah dihapus
   const raw = (await db
-    .collection("analyses")
+    .collection("users")
     .aggregate([
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          users: { $addToSet: "$userId" },
+          users: { $sum: 1 },
         },
       },
       {
         $project: {
           _id: 0,
           date: "$_id",
-          users: { $size: "$users" },
+          users: 1,
         },
       },
-      { $sort: { date: -1 } },
-      { $limit: 30 },
+      { $sort: { date: 1 } },
     ])
     .toArray()) as DailyActiveItem[];
 
   const dailyMap = new Map(raw.map((d) => [d.date, d.users]));
 
-  const latestDate =
-    raw.length > 0 ? new Date(raw[raw.length - 1].date) : new Date();
+  // Selalu bangun 30 hari mundur dari hari ini
+  const today = new Date();
   const data = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date(latestDate);
+    const d = new Date(today);
     d.setDate(d.getDate() - (29 - i));
     const key = d.toISOString().slice(0, 10);
     const label = `${d.getDate()}/${d.getMonth() + 1}`;
     return { day: label, users: dailyMap.get(key) ?? 0 };
   });
 
-  const last7 = data.slice(-7).reduce((s, d) => s + d.users, 0);
-  const prev7 = data.slice(-14, -7).reduce((s, d) => s + d.users, 0);
-  const growth = prev7 === 0 ? 0 : Math.round(((last7 - prev7) / prev7) * 100);
+  const total30 = data.reduce((s, d) => s + d.users, 0);
+  const avgPerDay = Math.round((total30 / 30) * 10) / 10; // 1 desimal
 
-  return { data, growth };
+  return { data, avgPerDay };
 }
 
 async function getStats() {
   const db = await getDb();
 
-  const [users, accounts, analyses] = await Promise.all([
+  const [users, accounts, wishlistItems] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("accounts").countDocuments(),
-    db.collection("analyses").countDocuments(),
+    db.collection("wishlist").countDocuments(),
   ]);
 
+  // Group by kata pertama primaryNiche
   const niches = (await db
     .collection("analyses")
     .aggregate([
       { $match: { primaryNiche: { $exists: true, $ne: null } } },
-      { $group: { _id: "$primaryNiche", count: { $sum: 1 } } },
+      {
+        $project: {
+          nicheCategory: {
+            $trim: {
+              input: {
+                $arrayElemAt: [
+                  { $split: [{ $toLower: "$primaryNiche" }, " "] },
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $group: { _id: "$nicheCategory", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 6 },
     ])
@@ -106,6 +120,7 @@ async function getStats() {
     ])
     .toArray()) as ActivityItem[];
 
+  const analyses = await db.collection("analyses").countDocuments();
   const avgConfidence =
     analyses > 0
       ? await db
@@ -117,7 +132,14 @@ async function getStats() {
           .then((r) => Math.round(r[0]?.avg || 0))
       : 0;
 
-  return { users, accounts, analyses, niches, recentActivity, avgConfidence };
+  return {
+    users,
+    accounts,
+    wishlistItems,
+    niches,
+    recentActivity,
+    avgConfidence,
+  };
 }
 
 function timeAgo(date: Date) {
@@ -169,15 +191,15 @@ export default async function AdminPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Total Analyses
+              Total Wishlist
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-foreground">
-              {stats.analyses}
+              {stats.wishlistItems}
             </p>
-            <p className="text-xs text-teal-500 mt-1">AI analyses run</p>
+            <p className="text-xs text-teal-500 mt-1">Produk disimpan</p>
           </CardContent>
         </Card>
 
@@ -215,7 +237,7 @@ export default async function AdminPage() {
       {/* Chart + Niche Distribution */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="xl:col-span-2">
-          <DailyActiveChart data={daily.data} growth={daily.growth} />
+          <DailyActiveChart data={daily.data} avgPerDay={daily.avgPerDay} />
         </div>
 
         <Card>
@@ -224,7 +246,7 @@ export default async function AdminPage() {
               Niche Distribution
             </CardTitle>
             <p className="text-xs text-muted-foreground">
-              Top niche di platform
+              Kategori niche di platform
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,7 +262,7 @@ export default async function AdminPage() {
                 return (
                   <div key={n._id} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-foreground font-medium">
+                      <span className="text-foreground font-medium capitalize">
                         {n._id}
                       </span>
                       <span className="text-muted-foreground">{n.count}</span>
