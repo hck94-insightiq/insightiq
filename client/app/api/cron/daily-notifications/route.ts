@@ -6,8 +6,8 @@ import { sendMessage, formatDailyMessage } from "@/lib/telegram";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const secret = request.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const secret = request.headers.get("authorization");
+  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -68,15 +68,17 @@ export async function GET(request: NextRequest) {
       const message = formatDailyMessage(
         user.name,
         analysis as any,
-        account as any
+        account as any,
       );
 
       await sendMessage(user.telegramChatId, message);
 
-      await db.collection("users").updateOne(
-        { _id: user._id },
-        { $set: { lastNotificationSentAt: nowUTC } }
-      );
+      await db
+        .collection("users")
+        .updateOne(
+          { _id: user._id },
+          { $set: { lastNotificationSentAt: nowUTC } },
+        );
 
       sent++;
     } catch (err: any) {
