@@ -395,7 +395,7 @@ function PeluangDetail({
                  the longest label; all bars start at the same position
         `contents` on the row wrapper makes children direct grid items
       */}
-      <div className="grid grid-cols-[max-content_1fr_28px] gap-x-2 sm:gap-x-3 gap-y-2 sm:gap-y-3">
+      <div className="grid grid-cols-[80px_1fr_28px] sm:grid-cols-[max-content_1fr_28px] gap-x-2 sm:gap-x-3 gap-y-2 sm:gap-y-3">
         {sorted.map((item, i) => {
           const isLowest = i === sorted.length - 1;
           return (
@@ -485,133 +485,175 @@ export function AIAnalysisWheel({
     ),
   };
 
-  return (
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-      {/* Wheel — centered on mobile */}
-      <div
-        className="mx-auto lg:mx-0 relative shrink-0"
-        style={{ width: 220, height: 220 }}
-      >
-        <svg width="220" height="220" viewBox="0 0 220 220">
-          {SECTIONS.map((s) => {
-            const isSelected = selected === s.id;
-            return (
-              <path
-                key={s.id}
-                d={arcPath(CX, CY, RI, RO, s.a1, s.a2)}
-                fill={isSelected ? s.color : `${s.color}88`}
-                className="cursor-pointer transition-all duration-200"
-                onClick={() =>
-                  setSelected((prev) => (prev === s.id ? null : s.id))
-                }
-                style={{ outline: "none" }}
-              />
-            );
-          })}
-        </svg>
-
-        {/* Center circle */}
-        <div
-          className="absolute inset-0 m-auto flex flex-col items-center justify-center rounded-full bg-white dark:bg-[#111] shadow-md dark:shadow-none pointer-events-none transition-colors"
-          style={{ width: (RI - 2) * 2, height: (RI - 2) * 2 }}
-        >
-          {selectedSection ? (
-            <>
-              <span
-                className="font-mono text-[10px] font-extrabold uppercase tracking-widest leading-none"
-                style={{ color: selectedSection.color }}
-              >
-                {selectedSection.label.split(" ")[0]}
-              </span>
-              {selectedSection.label.split(" ").length > 1 && (
-                <span
-                  className="font-mono text-[8px] font-semibold leading-none mt-1"
-                  style={{ color: selectedSection.color }}
-                >
-                  {selectedSection.label.split(" ").slice(1).join(" ")}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="font-mono text-[9px] font-semibold text-muted-foreground text-center leading-tight">
-              KLIK
-              <br />
-              SECTION
-            </span>
-          )}
-        </div>
-
-        {/* Icon overlays */}
+  // Shared wheel SVG — rendered once per layout variant
+  const wheelSVG = (
+    <>
+      <svg width="220" height="220" viewBox="0 0 220 220">
         {SECTIONS.map((s) => {
-          const c = centroid(CX, CY, (RI + RO) / 2, s.a1, s.a2);
           const isSelected = selected === s.id;
-          const Icon = s.Icon;
           return (
-            <div
+            <path
               key={s.id}
-              className="pointer-events-none absolute flex flex-col items-center gap-0.5"
-              style={{ left: c.x - 14, top: c.y - 18 }}
-            >
-              <Icon
-                size={18}
-                className={`transition-all duration-200 ${
-                  isSelected
-                    ? "text-white drop-shadow-sm"
-                    : "text-teal-950/40 dark:text-white/40"
-                }`}
-                strokeWidth={isSelected ? 2.5 : 2}
-              />
-              <span
-                className={`font-mono text-[8px] uppercase tracking-[0.04em] whitespace-nowrap transition-all duration-200 ${
-                  isSelected
-                    ? "text-white font-bold drop-shadow-sm"
-                    : "text-teal-950/50 dark:text-white/40 font-semibold"
-                }`}
-              >
-                {s.label.split(" ")[0]}
-              </span>
-            </div>
+              d={arcPath(CX, CY, RI, RO, s.a1, s.a2)}
+              fill={isSelected ? s.color : `${s.color}88`}
+              className="cursor-pointer transition-all duration-200"
+              onClick={() =>
+                setSelected((prev) => (prev === s.id ? null : s.id))
+              }
+              style={{ outline: "none" }}
+            />
           );
         })}
-      </div>
+      </svg>
 
-      {/* Detail panel — auto height on mobile, fixed on lg */}
-      <div className="flex-1 min-w-0">
-        {!selected ? (
-          <div className="flex h-32 lg:h-[400px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border">
-            <p className="font-mono text-xs text-muted-foreground">
-              Klik section untuk lihat detail
-            </p>
-          </div>
+      {/* Center circle */}
+      <div
+        className="absolute inset-0 m-auto flex flex-col items-center justify-center rounded-full bg-white dark:bg-[#111] shadow-md dark:shadow-none pointer-events-none transition-colors"
+        style={{ width: (RI - 2) * 2, height: (RI - 2) * 2 }}
+      >
+        {selectedSection ? (
+          <>
+            <span
+              className="font-mono text-[10px] font-extrabold uppercase tracking-widest leading-none"
+              style={{ color: selectedSection.color }}
+            >
+              {selectedSection.label.split(" ")[0]}
+            </span>
+            {selectedSection.label.split(" ").length > 1 && (
+              <span
+                className="font-mono text-[8px] font-semibold leading-none mt-1"
+                style={{ color: selectedSection.color }}
+              >
+                {selectedSection.label.split(" ").slice(1).join(" ")}
+              </span>
+            )}
+          </>
         ) : (
-          <div className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 gap-4">
-            {/* Header */}
-            <div className="flex items-center gap-2.5 shrink-0">
-              {selectedSection && (
-                <div
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: `${selectedSection.color}22` }}
-                >
-                  <selectedSection.Icon
-                    size={15}
-                    style={{ color: selectedSection.color }}
-                  />
-                </div>
-              )}
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
-                  AI Analysis Report
-                </p>
-                <p className="text-sm font-semibold leading-tight">
-                  {selectedSection?.label}
-                </p>
-              </div>
-            </div>
-            {/* Content */}
-            <div>{detailContent[selected]}</div>
-          </div>
+          <span className="font-mono text-[9px] font-semibold text-muted-foreground text-center leading-tight">
+            KLIK
+            <br />
+            SECTION
+          </span>
         )}
       </div>
+
+      {/* Icon overlays */}
+      {SECTIONS.map((s) => {
+        const c = centroid(CX, CY, (RI + RO) / 2, s.a1, s.a2);
+        const isSelected = selected === s.id;
+        const Icon = s.Icon;
+        return (
+          <div
+            key={s.id}
+            className="pointer-events-none absolute flex flex-col items-center gap-0.5"
+            style={{ left: c.x - 14, top: c.y - 18 }}
+          >
+            <Icon
+              size={18}
+              className={`transition-all duration-200 ${
+                isSelected
+                  ? "text-white drop-shadow-sm"
+                  : "text-teal-950/40 dark:text-white/40"
+              }`}
+              strokeWidth={isSelected ? 2.5 : 2}
+            />
+            <span
+              className={`font-mono text-[8px] uppercase tracking-[0.04em] whitespace-nowrap transition-all duration-200 ${
+                isSelected
+                  ? "text-white font-bold drop-shadow-sm"
+                  : "text-teal-950/50 dark:text-white/40 font-semibold"
+              }`}
+            >
+              {s.label.split(" ")[0]}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+
+  // Shared detail card
+  const detailCard = selectedSection ? (
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 gap-4">
+      <div className="flex items-center gap-2.5 shrink-0">
+        <div
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+          style={{ background: `${selectedSection.color}22` }}
+        >
+          <selectedSection.Icon
+            size={15}
+            style={{ color: selectedSection.color }}
+          />
+        </div>
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+            AI Analysis Report
+          </p>
+          <p className="text-sm font-semibold leading-tight">
+            {selectedSection.label}
+          </p>
+        </div>
+      </div>
+      <div>{selected ? detailContent[selected] : null}</div>
     </div>
+  ) : null;
+
+  return (
+    <>
+      {/* ── MOBILE (< lg): wheel centered, detail fades in below ── */}
+      <div className="flex lg:hidden flex-col items-center gap-4">
+        <div className="relative shrink-0" style={{ width: 220, height: 220 }}>
+          {wheelSVG}
+        </div>
+
+        {/* Detail — fade + slide down */}
+        <div
+          className="w-full overflow-hidden"
+          style={{
+            transition: selected
+              ? "max-height 500ms ease-out, opacity 350ms ease-out 150ms, transform 350ms ease-out 150ms"
+              : "max-height 400ms ease-out, opacity 200ms ease-out, transform 200ms ease-out",
+            maxHeight: selected ? 800 : 0,
+            opacity: selected ? 1 : 0,
+            transform: selected ? "translateY(0)" : "translateY(-8px)",
+          }}
+        >
+          {detailCard}
+        </div>
+      </div>
+
+      {/* ── DESKTOP (lg+): wheel slides left, detail expands right ── */}
+      <div className="hidden lg:flex lg:items-start" style={{ minHeight: 220 }}>
+        {/* Wheel — margin-left transitions from center to 0 */}
+        <div
+          className="relative shrink-0"
+          style={{
+            width: 220,
+            height: 220,
+            transition: "margin-left 500ms cubic-bezier(0.4,0,0.2,1)",
+            marginLeft: selected ? 0 : "calc(50% - 110px)",
+          }}
+        >
+          {wheelSVG}
+        </div>
+
+        {/* Detail — expands from 0 width and fades in */}
+        <div
+          className="overflow-hidden"
+          style={{
+            flex: "1 1 0",
+            minWidth: 0,
+            transition: selected
+              ? "max-width 500ms cubic-bezier(0.4,0,0.2,1), opacity 400ms ease-out 250ms, padding-left 500ms cubic-bezier(0.4,0,0.2,1)"
+              : "max-width 400ms cubic-bezier(0.4,0,0.2,1), opacity 150ms ease-out, padding-left 400ms cubic-bezier(0.4,0,0.2,1)",
+            maxWidth: selected ? 9999 : 0,
+            opacity: selected ? 1 : 0,
+            paddingLeft: selected ? 20 : 0,
+          }}
+        >
+          {detailCard}
+        </div>
+      </div>
+    </>
   );
 }
