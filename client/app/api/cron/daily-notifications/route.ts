@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     .find({
       telegramConnected: true,
       notificationEnabled: true,
-      notificationHour: currentHour,
     })
     .toArray();
 
